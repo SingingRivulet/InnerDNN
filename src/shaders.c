@@ -253,6 +253,9 @@ void innerDNN_shaders_accum(shaderPrograms* prog, GLuint a, GLuint b, int size) 
     GPU_CHECK();
 }
 
+void innerDNN_shaders_layerNorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint weight, int size, int weight_offset, GLuint cache_1, GLuint cache_2) {
+}
+
 void innerDNN_shaders_rmsnorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint weight, int size, int weight_offset, GLuint cache_1, GLuint cache_2) {
     int currentStepSize = size;
     int nextStepSize = currentStepSize / 2;
@@ -509,14 +512,14 @@ void innerDNN_shaders_transformer_silu_and_mulW(shaderPrograms* prog,
 }
 
 void innerDNN_shaders_transformer_posEncoding(shaderPrograms* prog,
-                                                GLuint freq_cis,
-                                                GLuint q,
-                                                GLuint k,
-                                                int pos,
-                                                int dim,
-                                                int hidden_dim,
-                                                int freq_cis_idx_delta,
-                                                int head_size) {
+                                              GLuint freq_cis,
+                                              GLuint q,
+                                              GLuint k,
+                                              int pos,
+                                              int dim,
+                                              int hidden_dim,
+                                              int freq_cis_idx_delta,
+                                              int head_size) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, freq_cis);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, q);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, k);

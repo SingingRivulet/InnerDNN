@@ -55,6 +55,71 @@ static const char* shader_matmul_trans_vec4 =
     "    xout.data[i] = val;\n"
     "}\n";
 
+static const char* shader_variance_before_sum =
+    "#version 320 es\n"
+    "uniform int insize;\n"
+    "uniform int shape0;\n"
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) readonly buffer Input0{\n"
+    "    float data[];\n"
+    "} a;\n"
+
+    "layout(binding = 1) writeonly buffer Output0{\n"
+    "    float data[];\n"
+    "} sum;\n"
+
+    "layout(binding = 2) writeonly buffer Output1{\n"
+    "    float data[];\n"
+    "} vari;\n"
+
+    "void main(){\n"
+    "    int idx = int(gl_GlobalInvocationID.x);\n"
+    "    if(idx*2 >= insize){\n"
+    "        b.data[idx] = 0.;\n"
+    "        return;\n"
+    "    }\n"
+    "    float mean = sum.data[0]/float(insize);\n"
+    "    float res = (a.data[idx*2]-mean)*(a.data[idx*2]-mean);\n"
+    "    if(idx*2+1 < insize){\n"
+    "       res += (a.data[idx*2+1]-mean)*(a.data[idx*2+1]-mean);\n"
+    "    }\n"
+    "    b.data[idx] = res;\n"
+    "}\n";
+
+static const char* shader_layerNorm =
+    "#version 320 es\n"
+    "uniform int insize;\n"
+    "uniform int shape0;\n"
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) buffer Input0{\n"
+    "    float data[];\n"
+    "} x;\n"
+
+    "layout(binding = 1) readonly buffer Input1{\n"
+    "    float data[];\n"
+    "} sum;\n"
+
+    "layout(binding = 2) readonly buffer Input2{\n"
+    "    float data[];\n"
+    "} vari_sum;\n"
+
+    "layout(binding = 3) readonly buffer Input3{\n"
+    "    float data[];\n"
+    "} weight;\n"
+
+    "layout(binding = 4) readonly buffer Input4{\n"
+    "    float data[];\n"
+    "} bias;\n"
+
+    "void main(){\n"
+    "    int idx = int(gl_GlobalInvocationID.x);\n"
+    "    float mean = sum.data[0]/float(insize);\n"
+    "    float vari = vari_sum.data[0]/float(insize);\n"
+    "    x.data[idx] = (x.data[idx] - mean) / sqrt(vari + 0.00005) * weight.data[idx] + bias.data[idx];\n"
+    "}\n";
+
 static const char* shader_rmsnorm_squares_and_sum =
     "#version 320 es\n"
     "uniform int insize;\n"
@@ -521,3 +586,193 @@ static const char* shader_copyBuffer =
     "    int index = int(gl_GlobalInvocationID.x);\n"
     "    dst.data[index+dst_offset] = src.data[index+src_offset];\n"
     "}\n";
+
+static const char* shader_rwkv_att_wkv =
+    "#version 320 es\n"
+
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) readonly buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} att_time_first;\n"
+
+    "layout(binding = 1) readonly buffer Input1{\n"
+    "    vec4 data[];\n"
+    "} att_time_decay;\n"
+
+    "layout(binding = 2) readonly buffer Input2{\n"
+    "    vec4 data[];\n"
+    "} k;\n"
+
+    "layout(binding = 3) readonly buffer Input3{\n"
+    "    vec4 data[];\n"
+    "} v;\n"
+
+    "layout(binding = 4) buffer Input4{\n"
+    "    vec4 data[];\n"
+    "} aa;\n"
+
+    "layout(binding = 5) buffer Input5{\n"
+    "    vec4 data[];\n"
+    "} bb;\n"
+
+    "layout(binding = 6) buffer Input6{\n"
+    "    vec4 data[];\n"
+    "} pp;\n"
+
+    "layout(binding = 7) writeonly buffer Output0{\n"
+    "    vec4 data[];\n"
+    "} wkv;\n"
+
+    "void main(){\n"
+    "    int index = int(gl_GlobalInvocationID.x);\n"
+    "    vec4 pp_v = pp.data[index];\n"
+    "    vec4 k_v = k.data[index];\n"
+    "    vec4 v_v = v.data[index];\n"
+    "    vec4 ww = att_time_first.data[index] + k_v;\n"
+    "    vec4 qq = max(ww , pp_v);\n"
+    "    vec4 e1 = exp(pp_v - qq);\n"
+    "    vec4 e2 = exp(ww   - qq);\n"
+    "    vec4 a = e1 * aa.data[index] + e2 * v_v;\n"
+    "    vec4 b = e1 * bb.data[index] + e2;\n"
+    "    ww = pp.data[index] + time_decay.data[index];\n"
+    "    qq = max(ww, k_v);\n"
+    "    e1 = exp(ww - qq);\n"
+    "    e2 = exp(k_v - qq);\n"
+    "    aa.data[index] = e1 * aa.data[index] + e2 * v_v;\n"
+    "    bb.data[index] = e1 * bb.data[index] + e2;\n"
+    "    pp.data[index] = qq;\n"
+    "    wkv.data[index]= a/b;\n"
+    "}\n";
+
+static const char* shader_rwkv_att_rkv =
+    "#version 320 es\n"
+
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) readonly buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} att_time_mix_k;\n"
+
+    "layout(binding = 1) readonly buffer Input1{\n"
+    "    vec4 data[];\n"
+    "} att_time_mix_v;\n"
+
+    "layout(binding = 2) readonly buffer Input2{\n"
+    "    vec4 data[];\n"
+    "} att_time_mix_r;\n"
+
+    "layout(binding = 3) readonly buffer Input3{\n"
+    "    vec4 data[];\n"
+    "} x;\n"
+
+    "layout(binding = 4) readonly buffer Input4{\n"
+    "    vec4 data[];\n"
+    "} x_prev;\n"
+
+    "layout(binding = 5) writeonly buffer Input5{\n"
+    "    vec4 data[];\n"
+    "} xr;\n"
+
+    "layout(binding = 6) writeonly buffer Input6{\n"
+    "    vec4 data[];\n"
+    "} xk;\n"
+
+    "layout(binding = 7) writeonly buffer Output0{\n"
+    "    vec4 data[];\n"
+    "} xv;\n"
+
+    "void main(){\n"
+    "    int index = int(gl_GlobalInvocationID.x);\n"
+    "    vec4 x_v = x.data[index];\n"
+    "    vec4 x_prev_v = x_prev.data[index];\n"
+    "    vec4 time_mix_k_v = time_mix_k.data[index];\n"
+    "    vec4 time_mix_v_v = time_mix_v.data[index];\n"
+    "    vec4 time_mix_r_v = time_mix_r.data[index];\n"
+    "    xk.data[index] = x_v * time_mix_k_v + x_prev_v * (vec4(1.)-time_mix_k_v);\n"
+    "    xv.data[index] = x_v * time_mix_v_v + x_prev_v * (vec4(1.)-time_mix_v_v);\n"
+    "    xr.data[index] = x_v * time_mix_r_v + x_prev_v * (vec4(1.)-time_mix_r_v);\n"
+    "}\n";
+
+static const char* shader_rwkv_ffn =
+    "#version 320 es\n"
+
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) readonly buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} att_time_mix_k;\n"
+
+    "layout(binding = 1) readonly buffer Input1{\n"
+    "    vec4 data[];\n"
+    "} att_time_mix_r;\n"
+
+    "layout(binding = 2) readonly buffer Input2{\n"
+    "    vec4 data[];\n"
+    "} x;\n"
+
+    "layout(binding = 3) readonly buffer Input3{\n"
+    "    vec4 data[];\n"
+    "} x_prev;\n"
+
+    "layout(binding = 4) writeonly buffer Input4{\n"
+    "    vec4 data[];\n"
+    "} xr;\n"
+
+    "layout(binding = 5) writeonly buffer Input5{\n"
+    "    vec4 data[];\n"
+    "} xk;\n"
+
+    "void main(){\n"
+    "    int index = int(gl_GlobalInvocationID.x);\n"
+    "    vec4 x_v = x.data[index];\n"
+    "    vec4 x_prev_v = x_prev.data[index];\n"
+    "    vec4 time_mix_k_v = time_mix_k.data[index];\n"
+    "    vec4 time_mix_r_v = time_mix_r.data[index];\n"
+    "    xk.data[index] = x_v * time_mix_k_v + x_prev_v * (vec4(1.) - time_mix_k_v);\n"
+    "    xr.data[index] = x_v * time_mix_r_v + x_prev_v * (vec4(1.) - time_mix_r_v);\n"
+    "}";
+
+static const char* shader_sigmoid =
+    "#version 320 es\n"
+
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) readonly buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} x;\n"
+
+    "layout(binding = 1) writeonly buffer Output0{\n"
+    "    vec4 data[];\n"
+    "} xout;\n"
+
+    "void main(){\n"
+    "    int index = int(gl_GlobalInvocationID.x);\n"
+    "    xout.data[index] = vec4(1.) / (vec4(1.) - exp(-x.data[index]));\n"
+    "}";
+
+static const char* shader_reluAndsqr =
+    "#version 320 es\n"
+
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) readonly buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} x;\n"
+
+    "layout(binding = 1) writeonly buffer Output0{\n"
+    "    vec4 data[];\n"
+    "} xout;\n"
+
+    "vec4 sqr(vec4 x){\n"
+    "    return x*x;\n"
+    "}\n"
+
+    "vec4 relu(vec4 x){\n"
+    "    return max(vec4(0.) , x);\n"
+    "}\n"
+
+    "void main(){\n"
+    "    int index = int(gl_GlobalInvocationID.x);\n"
+    "    xout.data[index] = sqr(relu(x.data[index]));\n"
+    "}";
