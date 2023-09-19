@@ -71,7 +71,7 @@ static const char* shader_variance_before_sum =
 
     "layout(binding = 2) writeonly buffer Output1{\n"
     "    float data[];\n"
-    "} vari;\n"
+    "} b;\n"
 
     "void main(){\n"
     "    int idx = int(gl_GlobalInvocationID.x);\n"
@@ -87,10 +87,11 @@ static const char* shader_variance_before_sum =
     "    b.data[idx] = res;\n"
     "}\n";
 
-static const char* shader_layerNorm =
+static const char* shader_layerNorm_inplace =
     "#version 320 es\n"
     "uniform int insize;\n"
     "uniform int shape0;\n"
+    "uniform int weight_offset;\n"
     "layout(local_size_x = 1) in;\n"
 
     "layout(binding = 0) buffer Input0{\n"
@@ -117,7 +118,45 @@ static const char* shader_layerNorm =
     "    int idx = int(gl_GlobalInvocationID.x);\n"
     "    float mean = sum.data[0]/float(insize);\n"
     "    float vari = vari_sum.data[0]/float(insize);\n"
-    "    x.data[idx] = (x.data[idx] - mean) / sqrt(vari + 0.00005) * weight.data[idx] + bias.data[idx];\n"
+    "    x.data[idx] = (x.data[idx] - mean) / sqrt(vari + 0.00005) * weight.data[idx+weight_offset] + bias.data[idx+weight_offset];\n"
+    "}\n";
+    
+static const char* shader_layerNorm =
+    "#version 320 es\n"
+    "uniform int insize;\n"
+    "uniform int shape0;\n"
+    "uniform int weight_offset;\n"
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) buffer Input0{\n"
+    "    float data[];\n"
+    "} x;\n"
+
+    "layout(binding = 1) readonly buffer Input1{\n"
+    "    float data[];\n"
+    "} sum;\n"
+
+    "layout(binding = 2) readonly buffer Input2{\n"
+    "    float data[];\n"
+    "} vari_sum;\n"
+
+    "layout(binding = 3) readonly buffer Input3{\n"
+    "    float data[];\n"
+    "} weight;\n"
+
+    "layout(binding = 4) readonly buffer Input4{\n"
+    "    float data[];\n"
+    "} bias;\n"
+
+    "layout(binding = 5) writeonly buffer Input5{\n"
+    "    float data[];\n"
+    "} o;\n"
+
+    "void main(){\n"
+    "    int idx = int(gl_GlobalInvocationID.x);\n"
+    "    float mean = sum.data[0]/float(insize);\n"
+    "    float vari = vari_sum.data[0]/float(insize);\n"
+    "    o.data[idx] = (x.data[idx] - mean) / sqrt(vari + 0.00005) * weight.data[idx+weight_offset] + bias.data[idx+weight_offset];\n"
     "}\n";
 
 static const char* shader_rmsnorm_squares_and_sum =
@@ -339,7 +378,7 @@ static const char* shader_rmsnorm_normalize_and_scale =
     "    o.data[idx] = weight.data[idx+weight_offset] * (ss * x.data[idx]);\n"
     "}\n";
 
-static const char* shader_rmsnorm_normalize_and_scale_currentPos =
+static const char* shader_rmsnorm_normalize_and_scale_inplace =
     "#version 320 es\n"
     "uniform int size;\n"
     "uniform int weight_offset;\n"

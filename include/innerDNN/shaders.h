@@ -8,7 +8,7 @@ typedef struct {
     GLuint shader_sum;
     GLuint shader_sum_vec4;
     GLuint shader_rmsnorm_normalize_and_scale;
-    GLuint shader_rmsnorm_normalize_and_scale_currentPos;
+    GLuint shader_rmsnorm_normalize_and_scale_inplace;
     GLuint shader_accum;
     GLuint shader_positionalEncoding;
     GLuint shader_max;
@@ -24,6 +24,14 @@ typedef struct {
     GLuint shader_copyBuffer;
     GLuint shader_matmul;
     GLuint shader_matmul_trans_vec4;
+    GLuint shader_sigmoid;
+    GLuint shader_reluAndsqr;
+    GLuint shader_variance_before_sum;
+    GLuint shader_rwkv_att_rkv;
+    GLuint shader_rwkv_att_wkv;
+    GLuint shader_rwkv_ffn;
+    GLuint shader_layerNorm_inplace;
+    GLuint shader_layerNorm;
 } shaderPrograms;
 
 void innerDNN_shaders_createProgram(shaderPrograms* program);
