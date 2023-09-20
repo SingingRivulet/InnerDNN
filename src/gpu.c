@@ -8,6 +8,50 @@ void checkGPUError(int line) {
     }
 }
 
+
+void innerDNN_create_GPUContext(GPUContext* ctx) {
+    ctx->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (ctx->display == EGL_NO_DISPLAY) {
+        printf("eglGetDisplay returned EGL_NO_DISPLAY.\n");
+        return;
+    }
+
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLBoolean returnValue = eglInitialize(ctx->display, &majorVersion, &minorVersion);
+    if (returnValue != EGL_TRUE) {
+        printf("eglInitialize failed\n");
+        return;
+    }
+
+    EGLConfig cfg;
+    EGLint count;
+    EGLint s_configAttribs[] = {
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT_KHR,
+        EGL_NONE};
+    if (eglChooseConfig(ctx->display, s_configAttribs, &cfg, 1, &count) == EGL_FALSE) {
+        printf("eglChooseConfig failed\n");
+        return;
+    }
+
+    EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
+    ctx->context = eglCreateContext(ctx->display, cfg, EGL_NO_CONTEXT, context_attribs);
+    if (ctx->context == EGL_NO_CONTEXT) {
+        printf("eglCreateContext failed\n");
+        return;
+    }
+    returnValue = eglMakeCurrent(ctx->display, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx->context);
+    if (returnValue != EGL_TRUE) {
+        printf("eglMakeCurrent failed returned %d\n", returnValue);
+        return;
+    }
+}
+
+void innerDNN_release_GPUContext(GPUContext* ctx) {
+    eglDestroyContext(ctx->display, ctx->context);
+    eglTerminate(ctx->display);
+}
+
 //加载着色器
 
 GLuint innerDNN_shaders_loadShader(GLenum shaderType, const char* pSource) {

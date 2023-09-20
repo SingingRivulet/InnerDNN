@@ -17,6 +17,15 @@ void checkGPUError(int line);
 #define GPU_CHECK()
 #endif
 
+typedef struct {
+    EGLContext context;
+    EGLDisplay display;
+} GPUContext;
+
+//初始化gpu
+void innerDNN_create_GPUContext(GPUContext* ctx);
+void innerDNN_release_GPUContext(GPUContext* ctx);
+
 //加载shader
 GLuint innerDNN_shaders_loadShader(GLenum shaderType, const char* pSource);
 GLuint innerDNN_shaders_createComputeProgram(const char* pComputeSource);

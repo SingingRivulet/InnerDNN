@@ -89,6 +89,9 @@ void innerDNN_shaders_copyBuffer(shaderPrograms* prog, GLuint src, GLuint dst, i
 void innerDNN_shaders_accum(shaderPrograms* prog, GLuint a, GLuint b, int size);
 void innerDNN_shaders_rmsnorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint weight, int size, int weight_offset, GLuint cache_1, GLuint cache_2);
 void innerDNN_shaders_softmax(shaderPrograms* prog, GLuint x, int size_x, int size_y, GLuint cache_1, GLuint cache_2, GLuint cache_3, GLuint cache_4);
+void innerDNN_shaders_sigmoid(shaderPrograms* prog, GLuint x, GLuint xout, int size);
+
+
 void innerDNN_shaders_transformer_softmax(shaderPrograms* prog,
                                           GLuint x,
                                           int pos,
@@ -134,5 +137,44 @@ void innerDNN_shaders_transformer_posEncoding(shaderPrograms* prog,
                                                 int hidden_dim,
                                                 int freq_cis_idx_delta,
                                                 int head_size);
+
+void innerDNN_shaders_rwkv_att_wkv(
+    shaderPrograms* prog,
+    GLuint att_time_first,
+    GLuint att_time_decay,
+    GLuint k,
+    GLuint v,
+    GLuint aa,
+    GLuint bb,
+    GLuint pp,
+    GLuint wkv,
+    int size);
+
+void innerDNN_shaders_rwkv_att_rkv(
+    shaderPrograms* prog,
+    GLuint att_time_mix_k,
+    GLuint att_time_mix_v,
+    GLuint att_time_mix_r,
+    GLuint x,
+    GLuint x_prev,
+    GLuint xr,
+    GLuint xk,
+    GLuint xv,
+    int size);
+
+void innerDNN_shaders_rwkv_ffn(
+    shaderPrograms* prog,
+    GLuint att_time_mix_k,
+    GLuint att_time_mix_r,
+    GLuint x,
+    GLuint x_prev,
+    GLuint xr,
+    GLuint xk,
+    int size);
+
+void innerDNN_shaders_rwkv_relu_and_sqr(shaderPrograms* prog,
+                                        GLuint x,
+                                        GLuint xout,
+                                        int size);
 
 #endif
