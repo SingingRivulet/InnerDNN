@@ -32,12 +32,14 @@ typedef struct {
     GLuint shader_rwkv_ffn;
     GLuint shader_layerNorm_inplace;
     GLuint shader_layerNorm;
+    GLuint shader_vecxvec;
 } shaderPrograms;
 
 void innerDNN_shaders_createProgram(shaderPrograms* program);
 void innerDNN_shaders_deleteProgram(shaderPrograms* prog);
+int innerDNN_getBufferVec4(int size);
 
-//归约法
+// 归约法
 void innerDNN_shaders_reduce_step(GLuint kernel,
                                   GLuint inBuffer,
                                   int insize,
@@ -63,7 +65,7 @@ GLuint innerDNN_shaders_reduce_iteration_input(GLuint kernel_step,
                                                GLuint* otherBuffer,
                                                GLuint* outputAt);
 
-//矩阵与向量之间的乘法
+// 矩阵与向量之间的乘法
 void innerDNN_shaders_matxvec(
     shaderPrograms* prog,
     GLuint xout,
@@ -82,15 +84,15 @@ void innerDNN_shaders_matxvec_trans_vec4(
     int d,
     int x_offset,
     int w_offset);
+void innerDNN_shaders_vecxvec(shaderPrograms* prog, GLuint out, GLuint a, GLuint b, int size);
 
 void innerDNN_shaders_copyBuffer(shaderPrograms* prog, GLuint src, GLuint dst, int src_offset, int dst_offset, int size);
 
-//一些基本操作
+// 一些基本操作
 void innerDNN_shaders_accum(shaderPrograms* prog, GLuint a, GLuint b, int size);
 void innerDNN_shaders_rmsnorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint weight, int size, int weight_offset, GLuint cache_1, GLuint cache_2);
 void innerDNN_shaders_softmax(shaderPrograms* prog, GLuint x, int size_x, int size_y, GLuint cache_1, GLuint cache_2, GLuint cache_3, GLuint cache_4);
 void innerDNN_shaders_sigmoid(shaderPrograms* prog, GLuint x, GLuint xout, int size);
-
 
 void innerDNN_shaders_transformer_softmax(shaderPrograms* prog,
                                           GLuint x,
@@ -129,14 +131,14 @@ void innerDNN_shaders_transformer_silu_and_mulW(shaderPrograms* prog,
                                                 GLuint hb2,
                                                 int hidden_dim_vec4);
 void innerDNN_shaders_transformer_posEncoding(shaderPrograms* prog,
-                                                GLuint freq_cis,
-                                                GLuint q,
-                                                GLuint k,
-                                                int pos,
-                                                int dim,
-                                                int hidden_dim,
-                                                int freq_cis_idx_delta,
-                                                int head_size);
+                                              GLuint freq_cis,
+                                              GLuint q,
+                                              GLuint k,
+                                              int pos,
+                                              int dim,
+                                              int hidden_dim,
+                                              int freq_cis_idx_delta,
+                                              int head_size);
 
 void innerDNN_shaders_rwkv_att_wkv(
     shaderPrograms* prog,
@@ -152,14 +154,22 @@ void innerDNN_shaders_rwkv_att_wkv(
 
 void innerDNN_shaders_rwkv_att_rkv(
     shaderPrograms* prog,
+    GLuint r,
+    GLuint k,
+    GLuint v,
     GLuint att_time_mix_k,
     GLuint att_time_mix_v,
     GLuint att_time_mix_r,
+    GLuint att_receptance,
+    GLuint att_key,
+    GLuint att_value,
     GLuint x,
     GLuint x_prev,
     GLuint xr,
     GLuint xk,
     GLuint xv,
+    GLuint cache_r,
+    int w_offset,
     int size);
 
 void innerDNN_shaders_rwkv_ffn(
@@ -170,6 +180,16 @@ void innerDNN_shaders_rwkv_ffn(
     GLuint x_prev,
     GLuint xr,
     GLuint xk,
+    GLuint ffn_receptance,
+    GLuint ffn_key,
+    GLuint ffn_value,
+    GLuint r,
+    GLuint sr,
+    GLuint k,
+    GLuint sk,
+    GLuint wvk,
+    GLuint ffn,
+    int w_offset,
     int size);
 
 void innerDNN_shaders_rwkv_relu_and_sqr(shaderPrograms* prog,

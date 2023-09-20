@@ -58,6 +58,8 @@ void innerDNN_shaders_createProgram(shaderPrograms* program) {
     GPU_CHECK();
     program->shader_layerNorm = innerDNN_shaders_createComputeProgram(shader_layerNorm);
     GPU_CHECK();
+    program->shader_vecxvec = innerDNN_shaders_createComputeProgram(shader_vecxvec);
+    GPU_CHECK();
 }
 
 void innerDNN_shaders_deleteProgram(shaderPrograms* prog) {
@@ -89,6 +91,15 @@ void innerDNN_shaders_deleteProgram(shaderPrograms* prog) {
     glDeleteProgram(prog->shader_rwkv_ffn);
     glDeleteProgram(prog->shader_layerNorm_inplace);
     glDeleteProgram(prog->shader_layerNorm);
+    glDeleteProgram(prog->shader_vecxvec);
+}
+
+int innerDNN_getBufferVec4(int size) {
+    int n = size / 4;
+    if (size % 4 != 0) {
+        n += 1;
+    }
+    return n * 4;
 }
 
 // 归约法
@@ -139,9 +150,9 @@ GLuint innerDNN_shaders_reduce_iteration(
             break;
         }
         nextStepSize = currentStepSize / 4;
-        if (nextStepSize % 4 != 0 &&                      // currentStepSize一定是4的倍数，让nextStepSize也是4的倍数，保证迭代能进行
-            nextStepSize > 2) {                           // nextStepSize为2时，此次迭代后将结束循环
-            nextStepSize = ((nextStepSize / 4) + 1) * 4;  // 补全到4的倍数
+        if (nextStepSize % 4 != 0 &&                              // currentStepSize一定是4的倍数，让nextStepSize也是4的倍数，保证迭代能进行
+            nextStepSize > 2) {                                   // nextStepSize为2时，此次迭代后将结束循环
+            nextStepSize = innerDNN_getBufferVec4(nextStepSize);  // 补全到4的倍数
         }
         innerDNN_shaders_reduce_step(kernel_step_v4, currentBuffer, currentStepSize / 4, nextBuffer, nextStepSize, numSeq);
     }
@@ -198,7 +209,7 @@ GLuint innerDNN_shaders_reduce_iteration_input(
     } else {
         int nextStepSize_v4 = nextStepSize;
         if (nextStepSize_v4 % 4 != 0 && nextStepSize > 8) {
-            nextStepSize_v4 = ((nextStepSize_v4 / 4) + 1) * 4;  // 补全到4的倍数
+            nextStepSize_v4 = innerDNN_getBufferVec4(nextStepSize_v4);  // 补全到4的倍数
         }
         innerDNN_shaders_reduce_step(kernel_step_input, data, currentStepSize, cache_1, nextStepSize_v4, numSeq);
         return innerDNN_shaders_reduce_iteration(kernel_step, kernel_step_v4, cache_1, cache_2, nextStepSize_v4, numSeq, otherBuffer, outputAt);
@@ -267,6 +278,17 @@ void innerDNN_shaders_matxvec_trans_vec4(
     GPU_CHECK();
 }
 
+void innerDNN_shaders_vecxvec(shaderPrograms* prog, GLuint out, GLuint a, GLuint b, int size) {
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, a);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, b);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, out);
+    glUseProgram(prog->shader_vecxvec);
+
+    glDispatchCompute(size / 4, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    GPU_CHECK();
+}
+
 void innerDNN_shaders_accum(shaderPrograms* prog, GLuint a, GLuint b, int size) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, a);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, b);
@@ -301,7 +323,7 @@ void innerDNN_shaders_layerNorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint
     glUniform1i(shape0_gpu, nextStepSize);
 
     if (nextStepSize % 4 != 0 && nextStepSize > 8) {
-        nextStepSize = ((nextStepSize / 4) + 1) * 4;  // 补全到4的倍数
+        nextStepSize = innerDNN_getBufferVec4(nextStepSize);  // 补全到4的倍数
     }
 
     glDispatchCompute(nextStepSize, 1, 1);
@@ -369,7 +391,7 @@ void innerDNN_shaders_rmsnorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint w
     glUniform1i(shape0_gpu, nextStepSize);
 
     if (nextStepSize % 4 != 0 && nextStepSize > 8) {
-        nextStepSize = ((nextStepSize / 4) + 1) * 4;  // 补全到4的倍数
+        nextStepSize = innerDNN_getBufferVec4(nextStepSize);  // 补全到4的倍数
     }
 
     glDispatchCompute(nextStepSize, 1, 1);
@@ -679,21 +701,29 @@ void innerDNN_shaders_rwkv_att_wkv(
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, pp);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, wkv);
     glUseProgram(prog->shader_rwkv_att_wkv);
-    glDispatchCompute(size / 2, 1, 1);
+    glDispatchCompute(size, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     GPU_CHECK();
 }
 
 void innerDNN_shaders_rwkv_att_rkv(
     shaderPrograms* prog,
+    GLuint r,
+    GLuint k,
+    GLuint v,
     GLuint att_time_mix_k,
     GLuint att_time_mix_v,
     GLuint att_time_mix_r,
+    GLuint att_receptance,
+    GLuint att_key,
+    GLuint att_value,
     GLuint x,
     GLuint x_prev,
     GLuint xr,
     GLuint xk,
     GLuint xv,
+    GLuint cache_r,
+    int w_offset,
     int size) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, att_time_mix_k);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, att_time_mix_v);
@@ -704,19 +734,45 @@ void innerDNN_shaders_rwkv_att_rkv(
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, xk);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, xv);
     glUseProgram(prog->shader_rwkv_att_rkv);
-    glDispatchCompute(size / 2, 1, 1);
+    glDispatchCompute(size, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     GPU_CHECK();
+
+    innerDNN_shaders_matxvec_trans_vec4(
+        prog, cache_r, xr, att_receptance,
+        innerDNN_getBufferVec4(size),
+        size, 0, w_offset);
+    innerDNN_shaders_sigmoid(prog, r, cache_r, size);
+
+    innerDNN_shaders_matxvec_trans_vec4(
+        prog, k, xk, att_key,
+        innerDNN_getBufferVec4(size),
+        size, 0, w_offset);
+
+    innerDNN_shaders_matxvec_trans_vec4(
+        prog, v, xv, att_value,
+        innerDNN_getBufferVec4(size),
+        size, 0, w_offset);
 }
 
 void innerDNN_shaders_rwkv_ffn(
     shaderPrograms* prog,
+    GLuint ffn,
     GLuint att_time_mix_k,
     GLuint att_time_mix_r,
     GLuint x,
     GLuint x_prev,
     GLuint xr,
     GLuint xk,
+    GLuint ffn_receptance,
+    GLuint ffn_key,
+    GLuint ffn_value,
+    GLuint r,
+    GLuint sr,
+    GLuint k,
+    GLuint sk,
+    GLuint wvk,
+    int w_offset,
     int size) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, att_time_mix_k);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, att_time_mix_r);
@@ -725,7 +781,26 @@ void innerDNN_shaders_rwkv_ffn(
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, xr);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, xk);
     glUseProgram(prog->shader_rwkv_ffn);
-    glDispatchCompute(size / 2, 1, 1);
+    glDispatchCompute(size, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     GPU_CHECK();
+
+    innerDNN_shaders_matxvec_trans_vec4(
+        prog, r, xr, ffn_receptance,
+        innerDNN_getBufferVec4(size),
+        size, 0, w_offset);
+    innerDNN_shaders_matxvec_trans_vec4(
+        prog, k, xk, ffn_key,
+        innerDNN_getBufferVec4(size),
+        size, 0, w_offset);
+
+    innerDNN_shaders_rwkv_relu_and_sqr(prog, k, sk, size);
+    innerDNN_shaders_sigmoid(prog, r, sr, size);
+
+    innerDNN_shaders_matxvec_trans_vec4(
+        prog, wvk, sk, ffn_value,
+        innerDNN_getBufferVec4(size),
+        size, 0, w_offset);
+
+    innerDNN_shaders_vecxvec(prog, ffn, wvk, sr, innerDNN_getBufferVec4(size));
 }

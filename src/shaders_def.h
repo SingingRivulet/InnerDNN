@@ -1,5 +1,5 @@
 
-//shader定义
+// shader定义
 static const char* shader_matmul =
     "#version 320 es\n"
     "uniform int n;\n"
@@ -120,7 +120,7 @@ static const char* shader_layerNorm_inplace =
     "    float vari = vari_sum.data[0]/float(insize);\n"
     "    x.data[idx] = (x.data[idx] - mean) / sqrt(vari + 0.00005) * weight.data[idx+weight_offset] + bias.data[idx+weight_offset];\n"
     "}\n";
-    
+
 static const char* shader_layerNorm =
     "#version 320 es\n"
     "uniform int insize;\n"
@@ -280,8 +280,8 @@ static const char* shader_sum_vec4 =
     "    }\n"
     "    vec4 va = a.data[insize*idy + idx];\n"
 
-    "    float res0 = va.x + va.y;\n"  //step0-0
-    "    float res1 = va.z + va.w;\n"  //step0-1
+    "    float res0 = va.x + va.y;\n"  // step0-0
+    "    float res1 = va.z + va.w;\n"  // step0-1
 
     "    b.data[idx + shape0*idy] = res0 + res1;\n"
     "}\n";
@@ -341,8 +341,8 @@ static const char* shader_max_vec4 =
     "    }\n"
     "    vec4 va = a.data[insize*idy + idx];\n"
 
-    "    float res0 = max(va.x , va.y);\n"  //step0-0
-    "    float res1 = max(va.z , va.w);\n"  //step0-1
+    "    float res0 = max(va.x , va.y);\n"  // step0-0
+    "    float res1 = max(va.z , va.w);\n"  // step0-1
 
     "    b.data[idx + shape0*idy] = max(res0 , res1);\n"
     "}\n";
@@ -788,6 +788,28 @@ static const char* shader_sigmoid =
     "void main(){\n"
     "    int index = int(gl_GlobalInvocationID.x);\n"
     "    xout.data[index] = vec4(1.) / (vec4(1.) - exp(-x.data[index]));\n"
+    "}";
+
+static const char* shader_vecxvec =
+    "#version 320 es\n"
+
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) readonly buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} a;\n"
+
+    "layout(binding = 1) readonly buffer Input1{\n"
+    "    vec4 data[];\n"
+    "} b;\n"
+
+    "layout(binding = 2) writeonly buffer Output0{\n"
+    "    vec4 data[];\n"
+    "} out;\n"
+
+    "void main(){\n"
+    "    int index = int(gl_GlobalInvocationID.x);\n"
+    "    out.data[index] = a.data[index] * b.data[index];\n"
     "}";
 
 static const char* shader_reluAndsqr =
