@@ -681,6 +681,35 @@ void innerDNN_shaders_transformer_posEncoding(shaderPrograms* prog,
     GPU_CHECK();
 }
 
+void innerDNN_shaders_rwkv_carry(
+    shaderPrograms* prog,
+    GLuint weight,
+    GLuint bias,
+    GLuint x,
+    GLuint x_prev,
+    GLuint xx,
+    GLuint cache_1,
+    GLuint cache_2,
+    GLuint cache_3,
+    int size,
+    int w_offset,
+    int x_offset){
+    
+    innerDNN_shaders_layerNorm(prog, x, x, weight, bias, size, w_offset, cache_1, cache_2, cache_3);
+    
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, x);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, x_prev);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xx);
+    glUseProgram(prog->shader_rwkv_carry);
+
+    int uniformVar = glGetUniformLocation(prog->shader_rwkv_carry, "offset");
+    glUniform1i(uniformVar, x_offset / 4);
+
+    glDispatchCompute(size / 4, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    GPU_CHECK();
+}
+
 void innerDNN_shaders_rwkv_att_wkv(
     shaderPrograms* prog,
     GLuint att_time_first,
@@ -691,7 +720,8 @@ void innerDNN_shaders_rwkv_att_wkv(
     GLuint bb,
     GLuint pp,
     GLuint wkv,
-    int size) {
+    int size,
+    int offset) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, att_time_first);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, att_time_decay);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, k);
@@ -701,7 +731,11 @@ void innerDNN_shaders_rwkv_att_wkv(
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, pp);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, wkv);
     glUseProgram(prog->shader_rwkv_att_wkv);
-    glDispatchCompute(size, 1, 1);
+
+    int uniformVar = glGetUniformLocation(prog->shader_rwkv_att_wkv, "offset");
+    glUniform1i(uniformVar, offset / 4);
+
+    glDispatchCompute(size / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     GPU_CHECK();
 }
@@ -734,7 +768,7 @@ void innerDNN_shaders_rwkv_att_rkv(
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, xk);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, xv);
     glUseProgram(prog->shader_rwkv_att_rkv);
-    glDispatchCompute(size, 1, 1);
+    glDispatchCompute(size / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     GPU_CHECK();
 

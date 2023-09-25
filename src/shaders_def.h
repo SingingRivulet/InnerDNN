@@ -626,8 +626,33 @@ static const char* shader_copyBuffer =
     "    dst.data[index+dst_offset] = src.data[index+src_offset];\n"
     "}\n";
 
+static const char* shader_rwkv_carry = 
+    "#version 320 es\n"
+    "uniform int offset;\n"
+
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} xx;\n"
+
+    "layout(binding = 1) readonly buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} x;\n"
+
+    "layout(binding = 2) writeonly buffer Input0{\n"
+    "    vec4 data[];\n"
+    "} x_prev;\n"
+    
+    "void main(){\n"
+    "    int index = int(gl_GlobalInvocationID.x);\n"
+    "    x_prev.data[index] = xx.data[index+offset];\n"
+    "    xx.data[index+offset] = x.data[index];\n"
+    "}";
+
 static const char* shader_rwkv_att_wkv =
     "#version 320 es\n"
+    "uniform int offset;\n"
 
     "layout(local_size_x = 1) in;\n"
 
@@ -678,9 +703,9 @@ static const char* shader_rwkv_att_wkv =
     "    qq = max(ww, k_v);\n"
     "    e1 = exp(ww - qq);\n"
     "    e2 = exp(k_v - qq);\n"
-    "    aa.data[index] = e1 * aa.data[index] + e2 * v_v;\n"
-    "    bb.data[index] = e1 * bb.data[index] + e2;\n"
-    "    pp.data[index] = qq;\n"
+    "    aa.data[index+offect] = e1 * aa.data[index+offect] + e2 * v_v;\n"
+    "    bb.data[index+offect] = e1 * bb.data[index+offect] + e2;\n"
+    "    pp.data[index+offect] = qq;\n"
     "    wkv.data[index]= a/b;\n"
     "}\n";
 

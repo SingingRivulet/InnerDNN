@@ -140,6 +140,20 @@ void innerDNN_shaders_transformer_posEncoding(shaderPrograms* prog,
                                               int freq_cis_idx_delta,
                                               int head_size);
 
+void innerDNN_shaders_rwkv_carry(
+    shaderPrograms* prog,
+    GLuint weight,
+    GLuint bias,
+    GLuint x,
+    GLuint x_prev,
+    GLuint xx,
+    GLuint cache_1,
+    GLuint cache_2,
+    GLuint cache_3,
+    int size,
+    int w_offset,
+    int x_offset)
+
 void innerDNN_shaders_rwkv_att_wkv(
     shaderPrograms* prog,
     GLuint att_time_first,
@@ -150,7 +164,8 @@ void innerDNN_shaders_rwkv_att_wkv(
     GLuint bb,
     GLuint pp,
     GLuint wkv,
-    int size);
+    int size,
+    int offset);
 
 void innerDNN_shaders_rwkv_att_rkv(
     shaderPrograms* prog,
