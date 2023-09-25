@@ -33,6 +33,7 @@ typedef struct {
     GLuint shader_layerNorm_inplace;
     GLuint shader_layerNorm;
     GLuint shader_vecxvec;
+    GLuint shader_rwkv_carry;
 } shaderPrograms;
 
 void innerDNN_shaders_createProgram(shaderPrograms* program);
@@ -152,7 +153,7 @@ void innerDNN_shaders_rwkv_carry(
     GLuint cache_3,
     int size,
     int w_offset,
-    int x_offset)
+    int x_offset);
 
 void innerDNN_shaders_rwkv_att_wkv(
     shaderPrograms* prog,
@@ -184,11 +185,13 @@ void innerDNN_shaders_rwkv_att_rkv(
     GLuint xk,
     GLuint xv,
     GLuint cache_r,
+    int size,
     int w_offset,
-    int size);
+    int mix_offset);
 
 void innerDNN_shaders_rwkv_ffn(
     shaderPrograms* prog,
+    GLuint ffn,
     GLuint att_time_mix_k,
     GLuint att_time_mix_r,
     GLuint x,
@@ -203,9 +206,9 @@ void innerDNN_shaders_rwkv_ffn(
     GLuint k,
     GLuint sk,
     GLuint wvk,
-    GLuint ffn,
+    int size,
     int w_offset,
-    int size);
+    int mix_offset);
 
 void innerDNN_shaders_rwkv_relu_and_sqr(shaderPrograms* prog,
                                         GLuint x,
