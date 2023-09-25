@@ -697,7 +697,6 @@ void innerDNN_shaders_rwkv_carry(
     int size,
     int w_offset,
     int x_offset) {
-
     int sizev4 = innerDNN_getBufferVec4(size);
 
     innerDNN_shaders_layerNorm(prog, x, x, weight, bias, size, w_offset, cache_1, cache_2, cache_3);
@@ -715,6 +714,61 @@ void innerDNN_shaders_rwkv_carry(
     GPU_CHECK();
 }
 
+void innerDNN_shaders_rwkv_att(
+    shaderPrograms* prog,
+    GLuint output,
+    GLuint x,
+    GLuint x_prev,
+    GLuint aa,
+    GLuint bb,
+    GLuint pp,
+    GLuint xx,
+    GLuint norm_weight,
+    GLuint norm_bias,
+    GLuint att_time_first,
+    GLuint att_time_decay,
+    GLuint att_time_mix_k,
+    GLuint att_time_mix_v,
+    GLuint att_time_mix_r,
+    GLuint att_output,
+    GLuint att_receptance,
+    GLuint att_key,
+    GLuint att_value,
+    GLuint xr,
+    GLuint xk,
+    GLuint xv,
+    GLuint r,
+    GLuint k,
+    GLuint v,
+    GLuint wkv,
+    GLuint rwkv,
+    GLuint cache_r,
+    GLuint cache_1,
+    GLuint cache_2,
+    GLuint cache_3,
+    int size,
+    int rkv_w_offset,
+    int mix_offset) {
+    int sizev4 = innerDNN_getBufferVec4(size);
+    innerDNN_shaders_rwkv_carry(
+        prog, norm_weight, norm_bias, x, x_prev, xx, cache_1, cache_2, cache_3,
+        size, mix_offset, mix_offset);
+    innerDNN_shaders_rwkv_att_rkv(
+        prog, r, k, v,
+        att_time_mix_k, att_time_mix_v, att_time_mix_r,
+        att_receptance, att_key, att_value,
+        x, x_prev,
+        xr, xk, xv, cache_r, size, rkv_w_offset, mix_offset);
+    innerDNN_shaders_rwkv_att_wkv(
+        prog, att_time_first, att_time_decay,
+        k, v, aa, bb, pp, wkv, size, mix_offset);
+    innerDNN_shaders_vecxvec(prog, rwkv, r, wkv, sizev4);
+    innerDNN_shaders_matxvec_trans_vec4(
+        prog, output, rwkv, att_output,
+        sizev4,
+        size, 0, rkv_w_offset);
+}
+
 void innerDNN_shaders_rwkv_att_wkv(
     shaderPrograms* prog,
     GLuint att_time_first,
@@ -727,7 +781,6 @@ void innerDNN_shaders_rwkv_att_wkv(
     GLuint wkv,
     int size,
     int offset) {
-
     int sizev4 = innerDNN_getBufferVec4(size);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, att_time_first);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, att_time_decay);
@@ -767,7 +820,6 @@ void innerDNN_shaders_rwkv_att_rkv(
     int size,
     int w_offset,
     int mix_offset) {
-
     int sizev4 = innerDNN_getBufferVec4(size);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, att_time_mix_k);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, att_time_mix_v);
@@ -823,7 +875,6 @@ void innerDNN_shaders_rwkv_ffn(
     int size,
     int w_offset,
     int mix_offset) {
-        
     int sizev4 = innerDNN_getBufferVec4(size);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, att_time_mix_k);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, att_time_mix_r);
