@@ -717,15 +717,15 @@ static const char* shader_rwkv_att_rkv =
 
     "layout(binding = 0) readonly buffer Input0{\n"
     "    vec4 data[];\n"
-    "} att_time_mix_k;\n"
+    "} time_mix_k;\n"
 
     "layout(binding = 1) readonly buffer Input1{\n"
     "    vec4 data[];\n"
-    "} att_time_mix_v;\n"
+    "} time_mix_v;\n"
 
     "layout(binding = 2) readonly buffer Input2{\n"
     "    vec4 data[];\n"
-    "} att_time_mix_r;\n"
+    "} time_mix_r;\n"
 
     "layout(binding = 3) readonly buffer Input3{\n"
     "    vec4 data[];\n"
@@ -767,11 +767,11 @@ static const char* shader_rwkv_ffn =
 
     "layout(binding = 0) readonly buffer Input0{\n"
     "    vec4 data[];\n"
-    "} att_time_mix_k;\n"
+    "} time_mix_k;\n"
 
     "layout(binding = 1) readonly buffer Input1{\n"
     "    vec4 data[];\n"
-    "} att_time_mix_r;\n"
+    "} time_mix_r;\n"
 
     "layout(binding = 2) readonly buffer Input2{\n"
     "    vec4 data[];\n"

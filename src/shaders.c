@@ -688,6 +688,7 @@ void innerDNN_shaders_rwkv_carry(
     shaderPrograms* prog,
     GLuint weight,
     GLuint bias,
+    GLuint x_out,
     GLuint x,
     GLuint x_prev,
     GLuint xx,
@@ -699,9 +700,9 @@ void innerDNN_shaders_rwkv_carry(
     int x_offset) {
     int sizev4 = innerDNN_getBufferVec4(size);
 
-    innerDNN_shaders_layerNorm(prog, x, x, weight, bias, size, w_offset, cache_1, cache_2, cache_3);
+    innerDNN_shaders_layerNorm(prog, x_out, x, weight, bias, size, w_offset, cache_1, cache_2, cache_3);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, x);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, x_out);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, x_prev);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xx);
     glUseProgram(prog->shader_rwkv_carry);
@@ -717,7 +718,7 @@ void innerDNN_shaders_rwkv_carry(
 void innerDNN_shaders_rwkv_att(
     shaderPrograms* prog,
     GLuint output,
-    GLuint x,
+    GLuint x_in,
     GLuint x_prev,
     GLuint aa,
     GLuint bb,
@@ -742,6 +743,7 @@ void innerDNN_shaders_rwkv_att(
     GLuint v,
     GLuint wkv,
     GLuint rwkv,
+    GLuint x,
     GLuint cache_r,
     GLuint cache_1,
     GLuint cache_2,
@@ -751,7 +753,7 @@ void innerDNN_shaders_rwkv_att(
     int mix_offset) {
     int sizev4 = innerDNN_getBufferVec4(size);
     innerDNN_shaders_rwkv_carry(
-        prog, norm_weight, norm_bias, x, x_prev, xx, cache_1, cache_2, cache_3,
+        prog, norm_weight, norm_bias, x, x_in, x_prev, xx, cache_1, cache_2, cache_3,
         size, mix_offset, mix_offset);
     innerDNN_shaders_rwkv_att_rkv(
         prog, r, k, v,
@@ -858,12 +860,15 @@ void innerDNN_shaders_rwkv_att_rkv(
 void innerDNN_shaders_rwkv_ffn(
     shaderPrograms* prog,
     GLuint ffn,
-    GLuint att_time_mix_k,
-    GLuint att_time_mix_r,
-    GLuint x,
+    GLuint ffn_time_mix_k,
+    GLuint ffn_time_mix_r,
+    GLuint x_in,
     GLuint x_prev,
     GLuint xr,
     GLuint xk,
+    GLuint xx,
+    GLuint norm_weight,
+    GLuint norm_bias,
     GLuint ffn_receptance,
     GLuint ffn_key,
     GLuint ffn_value,
@@ -872,12 +877,20 @@ void innerDNN_shaders_rwkv_ffn(
     GLuint k,
     GLuint sk,
     GLuint wvk,
+    GLuint x,
+    GLuint cache_1,
+    GLuint cache_2,
+    GLuint cache_3,
     int size,
     int w_offset,
     int mix_offset) {
     int sizev4 = innerDNN_getBufferVec4(size);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, att_time_mix_k);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, att_time_mix_r);
+    innerDNN_shaders_rwkv_carry(
+        prog, norm_weight, norm_bias, x, x_in, x_prev, xx, cache_1, cache_2, cache_3,
+        size, mix_offset, mix_offset);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ffn_time_mix_k);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ffn_time_mix_r);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, x);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, x_prev);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, xr);
@@ -909,4 +922,102 @@ void innerDNN_shaders_rwkv_ffn(
         size, 0, w_offset);
 
     innerDNN_shaders_vecxvec(prog, ffn, wvk, sr, sizev4);
+}
+
+void innerDNN_shaders_rwkv_input(
+    shaderPrograms* prog,
+    GLuint x,
+    int token,
+    float* token_embedding_table,
+    GLuint weight,
+    GLuint bias,
+    GLuint cache_1,
+    GLuint cache_2,
+    GLuint cache_3,
+    int size) {
+    float* content_row = &(token_embedding_table[token * size]);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, x);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, size * sizeof(float), content_row);
+    innerDNN_shaders_layerNorm(prog, x, x, weight, bias, size, 0, cache_1, cache_2, cache_3);
+}
+
+void innerDNN_shaders_rwkv_output(
+    shaderPrograms* prog,
+    GLuint logit,
+    GLuint x,
+    GLuint weight,
+    GLuint bias,
+    GLuint head,
+    GLuint x_norm,
+    GLuint cache_1,
+    GLuint cache_2,
+    GLuint cache_3,
+    int size,
+    int vec_offset,
+    int mat_offset) {
+    int sizev4 = innerDNN_getBufferVec4(size);
+    innerDNN_shaders_layerNorm(
+        prog, x_norm, x,
+        weight, bias,
+        size, vec_offset, cache_1, cache_2, cache_3);
+    innerDNN_shaders_matxvec_trans_vec4(
+        prog, logit, x_norm, head,
+        sizev4,
+        size, 0, mat_offset);
+}
+
+void innerDNN_shaders_rwkv_layer(
+    shaderPrograms* prog,
+    GLuint x,
+    GLuint aa,
+    GLuint bb,
+    GLuint pp,
+    GLuint att_xx,
+    GLuint ffn_xx,
+    GLuint att_norm_weight,
+    GLuint att_norm_bias,
+    GLuint att_time_first,
+    GLuint att_time_decay,
+    GLuint att_time_mix_k,
+    GLuint att_time_mix_v,
+    GLuint att_time_mix_r,
+    GLuint att_output,
+    GLuint att_receptance,
+    GLuint att_key,
+    GLuint att_value,
+    GLuint ffn_time_mix_k,
+    GLuint ffn_time_mix_r,
+    GLuint ffn_norm_weight,
+    GLuint ffn_norm_bias,
+    GLuint ffn_receptance,
+    GLuint ffn_key,
+    GLuint ffn_value,
+    GLuint* caches,
+    int size,
+    int mat_offset,
+    int vec_offset) {
+    int sizev4 = innerDNN_getBufferVec4(size);
+    innerDNN_shaders_rwkv_att(
+        prog, caches[0], x, caches[1],
+        aa, bb, pp, att_xx,
+        att_norm_weight, att_norm_bias,
+        att_time_first, att_time_decay,
+        att_time_mix_k, att_time_mix_v, att_time_mix_r,
+        att_output, att_receptance,
+        att_key, att_value,
+        caches[2], caches[3], caches[4], caches[5], caches[6], caches[7], caches[8], caches[9],
+        caches[10], caches[11], caches[12], caches[13], caches[14],
+        size, mat_offset, vec_offset);
+    innerDNN_shaders_accum(prog, x, caches[0], sizev4);
+    innerDNN_shaders_rwkv_ffn(
+        prog, caches[0],
+        ffn_time_mix_k, ffn_time_mix_r,
+        x, caches[1],
+        caches[2], caches[3], ffn_xx,
+        ffn_norm_weight, ffn_norm_bias, ffn_receptance,
+        ffn_key, ffn_value,
+        caches[4], caches[5], caches[6], caches[7], caches[8],
+        caches[9], caches[10], caches[11], caches[12],
+        size, mat_offset, vec_offset);
+    innerDNN_shaders_accum(prog, x, caches[0], sizev4);
 }
