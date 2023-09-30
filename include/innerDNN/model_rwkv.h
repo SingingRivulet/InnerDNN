@@ -92,7 +92,13 @@ typedef struct {
     GLuint logit;
 } innerDNN_model_rwkv_buffer;
 
-void innerDNN_model_rwkv_weights_init(
+void innerDNN_model_rwkv_loadWeightsFromBuffer(
+    innerDNN_model_rwkv_weights_local* weight,
+    innerDNN_model_rwkv_weights_def* def,
+    float* buffer,
+    int bufferSize);
+
+void innerDNN_model_rwkv_weights_upload(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_weights_local* weights_local);
 void innerDNN_model_rwkv_weights_release(innerDNN_model_rwkv_weights_gpu* weights);

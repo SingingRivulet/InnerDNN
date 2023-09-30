@@ -1,9 +1,16 @@
 #include "model_rwkv.h"
 
-void innerDNN_model_rwkv_weights_init(
+void innerDNN_model_rwkv_loadWeightsFromBuffer(
+    innerDNN_model_rwkv_weights_local* weight,
+    innerDNN_model_rwkv_weights_def* def,
+    float* buffer,
+    int bufferSize) {}
+
+void innerDNN_model_rwkv_weights_upload(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_weights_local* weights_local) {
     // 初始化尺寸
+    weights->def = weights_local->def;
     weights->def->dim_hidden_vec4 = innerDNN_getBufferVec4(weights->def->dim_hidden);
     weights->def->dim_vec4 = innerDNN_getBufferVec4(weights->def->dim);
     weights->def->ffn_key_len = weights->def->dim_hidden_vec4 * weights->def->dim;
