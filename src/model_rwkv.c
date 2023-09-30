@@ -8,6 +8,12 @@ void innerDNN_model_rwkv_buffer_init(
     for (int i = 0; i < 15; ++i) {
         innerDNN_create_GPU_buffer(buffer->buffer[i], weights->dim_vec4, GL_DYNAMIC_DRAW, NULL);
     }
+    for (int i = 0; i < 2; ++i) {
+        innerDNN_create_GPU_buffer(
+            buffer->buffer_hidden[i],
+            weights->dim_hidden_vec4,
+            GL_DYNAMIC_DRAW, NULL);
+    }
 }
 void innerDNN_model_rwkv_buffer_release(
     innerDNN_model_rwkv_weights* weights,
@@ -16,6 +22,9 @@ void innerDNN_model_rwkv_buffer_release(
     glDeleteBuffers(1, &buffer->logit);
     for (int i = 0; i < 15; ++i) {
         glDeleteBuffers(1, &buffer->buffer[i]);
+    }
+    for (int i = 0; i < 2; ++i) {
+        glDeleteBuffers(1, &buffer->buffer_hidden[i]);
     }
 }
 
@@ -81,9 +90,14 @@ void innerDNN_model_rwkv_forward(
             weights->ffn_value,
 
             buffer->buffer,
+            buffer->buffer_hidden,
+
             weights->dim,
+            weights->dim_hidden_vec4,
+            weights->dim_vec4 * i,
             weights->weightMat_len * i,
-            weights->dim_vec4 * i);
+            weights->ffn_key_len * i,
+            weights->ffn_value_len * i);
     }
 
     innerDNN_shaders_rwkv_output(

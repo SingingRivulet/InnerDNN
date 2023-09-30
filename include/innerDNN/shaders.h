@@ -252,7 +252,10 @@ void innerDNN_shaders_rwkv_ffn(
     GLuint cache_2,
     GLuint cache_3,
     int size,
+    int hidden_size,
     int w_offset,
+    int ffn_key_offset,
+    int ffn_value_offset,
     int mix_offset);
 
 void innerDNN_shaders_rwkv_relu_and_sqr(innerDNN_shader_programs* prog,
@@ -287,9 +290,13 @@ void innerDNN_shaders_rwkv_layer(
     GLuint ffn_key,
     GLuint ffn_value,
     GLuint* caches,
+    GLuint* caches_hidden,
     int size,
+    int hidden_size,
+    int vec_offset,
     int mat_offset,
-    int vec_offset);
+    int ffn_key_offset,
+    int ffn_value_offset);
 void innerDNN_shaders_rwkv_output(
     innerDNN_shader_programs* prog,
     GLuint logit,

@@ -40,14 +40,20 @@ typedef struct {
     float* token_embedding_table;
 
     int dim;
+    int dim_hidden;
     int numLayer;
     // 储存参数是对齐vec4的
     int dim_vec4;
+    int dim_hidden_vec4;
     int weightMat_len;
+    // 隐含层的尺寸（同样是对齐vec4）
+    int ffn_key_len;
+    int ffn_value_len;
 } innerDNN_model_rwkv_weights;
 
 typedef struct {
     GLuint buffer[15];
+    GLuint buffer_hidden[2];
     GLuint x;
     GLuint logit;
 } innerDNN_model_rwkv_buffer;

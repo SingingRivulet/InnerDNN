@@ -882,9 +882,13 @@ void innerDNN_shaders_rwkv_ffn(
     GLuint cache_2,
     GLuint cache_3,
     int size,
+    int hidden_size,
     int w_offset,
+    int ffn_key_offset,
+    int ffn_value_offset,
     int mix_offset) {
     int sizev4 = innerDNN_getBufferVec4(size);
+    int hidden_size_v4 = innerDNN_getBufferVec4(hidden_size);
     innerDNN_shaders_rwkv_carry(
         prog, norm_weight, norm_bias, x, x_in, x_prev, xx, cache_1, cache_2, cache_3,
         size, mix_offset, mix_offset);
@@ -908,18 +912,18 @@ void innerDNN_shaders_rwkv_ffn(
         prog, r, xr, ffn_receptance,
         sizev4,
         size, 0, w_offset);
+    innerDNN_shaders_sigmoid(prog, r, sr, sizev4);
+
+    // 隐含层
     innerDNN_shaders_matxvec_trans_vec4(
         prog, k, xk, ffn_key,
         sizev4,
-        size, 0, w_offset);
-
-    innerDNN_shaders_rwkv_relu_and_sqr(prog, k, sk, size);
-    innerDNN_shaders_sigmoid(prog, r, sr, size);
-
+        hidden_size, 0, ffn_key_offset);
+    innerDNN_shaders_rwkv_relu_and_sqr(prog, k, sk, hidden_size_v4);
     innerDNN_shaders_matxvec_trans_vec4(
         prog, wvk, sk, ffn_value,
-        sizev4,
-        size, 0, w_offset);
+        hidden_size_v4,
+        size, 0, ffn_value_offset);
 
     innerDNN_shaders_vecxvec(prog, ffn, wvk, sr, sizev4);
 }
@@ -993,9 +997,13 @@ void innerDNN_shaders_rwkv_layer(
     GLuint ffn_key,
     GLuint ffn_value,
     GLuint* caches,
+    GLuint* caches_hidden,
     int size,
+    int hidden_size,
+    int vec_offset,
     int mat_offset,
-    int vec_offset) {
+    int ffn_key_offset,
+    int ffn_value_offset) {
     int sizev4 = innerDNN_getBufferVec4(size);
     innerDNN_shaders_rwkv_att(
         prog, caches[0], x, caches[1],
@@ -1016,8 +1024,10 @@ void innerDNN_shaders_rwkv_layer(
         caches[2], caches[3], ffn_xx,
         ffn_norm_weight, ffn_norm_bias, ffn_receptance,
         ffn_key, ffn_value,
-        caches[4], caches[5], caches[6], caches[7], caches[8],
-        caches[9], caches[10], caches[11], caches[12],
-        size, mat_offset, vec_offset);
+        caches[4], caches[5],
+        caches_hidden[0], caches_hidden[1],
+        caches[6], caches[7],
+        caches[8], caches[9], caches[10],
+        size, hidden_size, mat_offset, ffn_key_offset, ffn_value_offset, vec_offset);
     innerDNN_shaders_accum(prog, x, caches[0], sizev4);
 }
