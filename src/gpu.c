@@ -1,6 +1,6 @@
 #include "innerDNN/gpu.h"
 
-void checkGPUError(int line) {
+void innerDNN_checkGPUError(int line) {
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
         printf(__FILE__ ":%d glGetError returns %d\n", line, err);

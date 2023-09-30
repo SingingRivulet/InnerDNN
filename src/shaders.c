@@ -1,70 +1,70 @@
 #include "innerDNN/shaders.h"
 #include "shaders_def.inc"
 
-void innerDNN_shaders_createProgram(shaderPrograms* program) {
+void innerDNN_shaders_createProgram(innerDNN_shader_programs* program) {
     program->shader_rmsnorm_squares_and_sum = innerDNN_shaders_createComputeProgram(shader_rmsnorm_squares_and_sum);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_sum = innerDNN_shaders_createComputeProgram(shader_sum);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_sum_vec4 = innerDNN_shaders_createComputeProgram(shader_sum_vec4);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_rmsnorm_normalize_and_scale = innerDNN_shaders_createComputeProgram(shader_rmsnorm_normalize_and_scale);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_rmsnorm_normalize_and_scale_inplace = innerDNN_shaders_createComputeProgram(shader_rmsnorm_normalize_and_scale_inplace);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_accum = innerDNN_shaders_createComputeProgram(shader_accum);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_positionalEncoding = innerDNN_shaders_createComputeProgram(shader_positionalEncoding);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_max = innerDNN_shaders_createComputeProgram(shader_max);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_max_vec4 = innerDNN_shaders_createComputeProgram(shader_max_vec4);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_softmax_exp = innerDNN_shaders_createComputeProgram(shader_softmax_exp);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_softmax_normalize = innerDNN_shaders_createComputeProgram(shader_softmax_normalize);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_transformer_get_query_vector = innerDNN_shaders_createComputeProgram(shader_transformer_get_query_vector);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_transformer_silu_and_mulW3 = innerDNN_shaders_createComputeProgram(shader_transformer_silu_and_mulW3);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_transformer_build_attMat = innerDNN_shaders_createComputeProgram(shader_transformer_build_attMat);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_transformer_softmax_input = innerDNN_shaders_createComputeProgram(shader_transformer_softmax_input);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_transformer_softmax_output = innerDNN_shaders_createComputeProgram(shader_transformer_softmax_output);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_temperature = innerDNN_shaders_createComputeProgram(shader_temperature);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_copyBuffer = innerDNN_shaders_createComputeProgram(shader_copyBuffer);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_matmul_trans_vec4 = innerDNN_shaders_createComputeProgram(shader_matmul_trans_vec4);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_matmul = innerDNN_shaders_createComputeProgram(shader_matmul);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_sigmoid = innerDNN_shaders_createComputeProgram(shader_sigmoid);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_reluAndsqr = innerDNN_shaders_createComputeProgram(shader_reluAndsqr);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_variance_before_sum = innerDNN_shaders_createComputeProgram(shader_variance_before_sum);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_rwkv_att_rkv = innerDNN_shaders_createComputeProgram(shader_rwkv_att_rkv);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_rwkv_att_wkv = innerDNN_shaders_createComputeProgram(shader_rwkv_att_wkv);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_rwkv_ffn = innerDNN_shaders_createComputeProgram(shader_rwkv_ffn);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_layerNorm_inplace = innerDNN_shaders_createComputeProgram(shader_layerNorm_inplace);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_layerNorm = innerDNN_shaders_createComputeProgram(shader_layerNorm);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_vecxvec = innerDNN_shaders_createComputeProgram(shader_vecxvec);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
     program->shader_rwkv_carry = innerDNN_shaders_createComputeProgram(shader_rwkv_carry);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_deleteProgram(shaderPrograms* prog) {
+void innerDNN_shaders_deleteProgram(innerDNN_shader_programs* prog) {
     glDeleteProgram(prog->shader_rmsnorm_squares_and_sum);
     glDeleteProgram(prog->shader_sum);
     glDeleteProgram(prog->shader_sum_vec4);
@@ -125,7 +125,7 @@ void innerDNN_shaders_reduce_step(
 
     glDispatchCompute(outsize, numSeq, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 GLuint innerDNN_shaders_reduce_iteration(
     GLuint kernel_step,
@@ -221,7 +221,7 @@ GLuint innerDNN_shaders_reduce_iteration_input(
 
 // 矩阵与向量之间的乘法
 void innerDNN_shaders_matxvec(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint xout,
     GLuint x,
     GLuint w,
@@ -246,10 +246,10 @@ void innerDNN_shaders_matxvec(
 
     glDispatchCompute(d, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 void innerDNN_shaders_matxvec_trans_vec4(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint xout,
     GLuint x,
     GLuint w,
@@ -278,10 +278,10 @@ void innerDNN_shaders_matxvec_trans_vec4(
 
     glDispatchCompute(n / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_vecxvec(shaderPrograms* prog, GLuint out, GLuint a, GLuint b, int size) {
+void innerDNN_shaders_vecxvec(innerDNN_shader_programs* prog, GLuint out, GLuint a, GLuint b, int size) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, a);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, b);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, out);
@@ -289,20 +289,20 @@ void innerDNN_shaders_vecxvec(shaderPrograms* prog, GLuint out, GLuint a, GLuint
 
     glDispatchCompute(size / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_accum(shaderPrograms* prog, GLuint a, GLuint b, int size) {
+void innerDNN_shaders_accum(innerDNN_shader_programs* prog, GLuint a, GLuint b, int size) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, a);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, b);
     glUseProgram(prog->shader_accum);
 
     glDispatchCompute(size / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_layerNorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint weight, GLuint bias, int size, int weight_offset, GLuint cache_1, GLuint cache_2, GLuint cache_3) {
+void innerDNN_shaders_layerNorm(innerDNN_shader_programs* prog, GLuint o, GLuint x, GLuint weight, GLuint bias, int size, int weight_offset, GLuint cache_1, GLuint cache_2, GLuint cache_3) {
     // LayerNorm is `x = (x - mean(x)) / sqrt(variance(x) + 1e-5) * weight + bias`
     // sum
     GLuint currentBuffer;
@@ -331,7 +331,7 @@ void innerDNN_shaders_layerNorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint
 
     glDispatchCompute(nextStepSize, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 
     GLuint resBuffer_varisum = innerDNN_shaders_reduce_iteration(
         prog->shader_sum, prog->shader_sum_vec4,
@@ -352,7 +352,7 @@ void innerDNN_shaders_layerNorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint
 
         glDispatchCompute(size, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        GPU_CHECK();
+        innerDNN_GPU_CHECK();
     } else {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, x);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, resBuffer_sum);
@@ -367,11 +367,11 @@ void innerDNN_shaders_layerNorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint
 
         glDispatchCompute(size, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        GPU_CHECK();
+        innerDNN_GPU_CHECK();
     }
 }
 
-void innerDNN_shaders_rmsnorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint weight, int size, int weight_offset, GLuint cache_1, GLuint cache_2) {
+void innerDNN_shaders_rmsnorm(innerDNN_shader_programs* prog, GLuint o, GLuint x, GLuint weight, int size, int weight_offset, GLuint cache_1, GLuint cache_2) {
     int currentStepSize = size;
     int nextStepSize = currentStepSize / 2;
 
@@ -399,7 +399,7 @@ void innerDNN_shaders_rmsnorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint w
 
     glDispatchCompute(nextStepSize, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 
     nextBuffer = innerDNN_shaders_reduce_iteration(
         prog->shader_sum, prog->shader_sum_vec4,
@@ -418,7 +418,7 @@ void innerDNN_shaders_rmsnorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint w
 
         glDispatchCompute(size, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        GPU_CHECK();
+        innerDNN_GPU_CHECK();
 
     } else {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, nextBuffer);
@@ -434,11 +434,11 @@ void innerDNN_shaders_rmsnorm(shaderPrograms* prog, GLuint o, GLuint x, GLuint w
 
         glDispatchCompute(size, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        GPU_CHECK();
+        innerDNN_GPU_CHECK();
     }
 }
 
-void innerDNN_shaders_softmax(shaderPrograms* prog, GLuint x, int size_x, int size_y, GLuint cache_1, GLuint cache_2, GLuint cache_3, GLuint cache_4) {
+void innerDNN_shaders_softmax(innerDNN_shader_programs* prog, GLuint x, int size_x, int size_y, GLuint cache_1, GLuint cache_2, GLuint cache_3, GLuint cache_4) {
     // find max value (for numerical stability)
     GLuint currentBuffer = cache_1;
     GLuint nextBuffer = cache_2;
@@ -456,7 +456,7 @@ void innerDNN_shaders_softmax(shaderPrograms* prog, GLuint x, int size_x, int si
 
     glDispatchCompute(size_x * size_y, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 
     // sum
     resBuffer_sum = innerDNN_shaders_reduce_iteration_input(
@@ -474,10 +474,10 @@ void innerDNN_shaders_softmax(shaderPrograms* prog, GLuint x, int size_x, int si
 
     glDispatchCompute(size_x, size_y, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_transformer_softmax(shaderPrograms* prog,
+void innerDNN_shaders_transformer_softmax(innerDNN_shader_programs* prog,
                                           GLuint x,
                                           int pos,
                                           int seq_len,
@@ -500,7 +500,7 @@ void innerDNN_shaders_transformer_softmax(shaderPrograms* prog,
 
     glDispatchCompute(n_heads, pos + 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 
     innerDNN_shaders_softmax(prog, transformer_softmax_cache, pos + 1, n_heads, cache_1, cache_2, cache_3, cache_4);
 
@@ -516,10 +516,10 @@ void innerDNN_shaders_transformer_softmax(shaderPrograms* prog,
 
     glDispatchCompute(n_heads, pos + 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_transformer_sum(shaderPrograms* prog, GLuint outMat, GLuint inMat, int size_x, int size_y, GLuint cache_1, GLuint cache_2) {
+void innerDNN_shaders_transformer_sum(innerDNN_shader_programs* prog, GLuint outMat, GLuint inMat, int size_x, int size_y, GLuint cache_1, GLuint cache_2) {
     // prog, s, s->xb, s->mulBuffer_4, pos + 1, head_size, p->n_heads
     GLuint res = outMat;
     innerDNN_shaders_reduce_iteration_input(
@@ -527,7 +527,7 @@ void innerDNN_shaders_transformer_sum(shaderPrograms* prog, GLuint outMat, GLuin
         inMat, cache_1, cache_2, size_x, size_y, NULL, &res);
 }
 
-void innerDNN_shaders_copyBuffer(shaderPrograms* prog, GLuint src, GLuint dst, int src_offset, int dst_offset, int size) {
+void innerDNN_shaders_copyBuffer(innerDNN_shader_programs* prog, GLuint src, GLuint dst, int src_offset, int dst_offset, int size) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, src);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, dst);
     glUseProgram(prog->shader_copyBuffer);
@@ -540,10 +540,10 @@ void innerDNN_shaders_copyBuffer(shaderPrograms* prog, GLuint src, GLuint dst, i
 
     glDispatchCompute(size, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_transformer_build_attMat(shaderPrograms* prog,
+void innerDNN_shaders_transformer_build_attMat(innerDNN_shader_programs* prog,
                                                GLuint value_cache,
                                                GLuint att,
                                                GLuint attMat,
@@ -576,10 +576,10 @@ void innerDNN_shaders_transformer_build_attMat(shaderPrograms* prog,
 
     glDispatchCompute(n_heads, head_size, pos + 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_transformer_get_query_vector(shaderPrograms* prog,
+void innerDNN_shaders_transformer_get_query_vector(innerDNN_shader_programs* prog,
                                                    GLuint q,
                                                    GLuint key_cache,
                                                    GLuint att,
@@ -611,10 +611,10 @@ void innerDNN_shaders_transformer_get_query_vector(shaderPrograms* prog,
 
     glDispatchCompute(n_heads, head_size, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_transformer_silu_and_mulW(shaderPrograms* prog,
+void innerDNN_shaders_transformer_silu_and_mulW(innerDNN_shader_programs* prog,
                                                 GLuint hb,
                                                 GLuint hb2,
                                                 int hidden_dim_vec4) {
@@ -623,10 +623,10 @@ void innerDNN_shaders_transformer_silu_and_mulW(shaderPrograms* prog,
     glUseProgram(prog->shader_transformer_silu_and_mulW3);
     glDispatchCompute(hidden_dim_vec4 / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_rwkv_relu_and_sqr(shaderPrograms* prog,
+void innerDNN_shaders_rwkv_relu_and_sqr(innerDNN_shader_programs* prog,
                                         GLuint x,
                                         GLuint xout,
                                         int size) {
@@ -635,10 +635,10 @@ void innerDNN_shaders_rwkv_relu_and_sqr(shaderPrograms* prog,
     glUseProgram(prog->shader_reluAndsqr);
     glDispatchCompute(size / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_sigmoid(shaderPrograms* prog,
+void innerDNN_shaders_sigmoid(innerDNN_shader_programs* prog,
                               GLuint x,
                               GLuint xout,
                               int size) {
@@ -647,10 +647,10 @@ void innerDNN_shaders_sigmoid(shaderPrograms* prog,
     glUseProgram(prog->shader_sigmoid);
     glDispatchCompute(size / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
-void innerDNN_shaders_transformer_posEncoding(shaderPrograms* prog,
+void innerDNN_shaders_transformer_posEncoding(innerDNN_shader_programs* prog,
                                               GLuint freq_cis,
                                               GLuint q,
                                               GLuint k,
@@ -681,11 +681,11 @@ void innerDNN_shaders_transformer_posEncoding(shaderPrograms* prog,
 
     glDispatchCompute(dim / 2, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
 void innerDNN_shaders_rwkv_carry(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint weight,
     GLuint bias,
     GLuint x_out,
@@ -712,11 +712,11 @@ void innerDNN_shaders_rwkv_carry(
 
     glDispatchCompute(sizev4 / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
 void innerDNN_shaders_rwkv_att(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint output,
     GLuint x_in,
     GLuint x_prev,
@@ -772,7 +772,7 @@ void innerDNN_shaders_rwkv_att(
 }
 
 void innerDNN_shaders_rwkv_att_wkv(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint att_time_first,
     GLuint att_time_decay,
     GLuint k,
@@ -799,11 +799,11 @@ void innerDNN_shaders_rwkv_att_wkv(
 
     glDispatchCompute(sizev4 / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 }
 
 void innerDNN_shaders_rwkv_att_rkv(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint r,
     GLuint k,
     GLuint v,
@@ -838,7 +838,7 @@ void innerDNN_shaders_rwkv_att_rkv(
 
     glDispatchCompute(sizev4 / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 
     innerDNN_shaders_matxvec_trans_vec4(
         prog, cache_r, xr, att_receptance,
@@ -858,7 +858,7 @@ void innerDNN_shaders_rwkv_att_rkv(
 }
 
 void innerDNN_shaders_rwkv_ffn(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint ffn,
     GLuint ffn_time_mix_k,
     GLuint ffn_time_mix_r,
@@ -902,7 +902,7 @@ void innerDNN_shaders_rwkv_ffn(
 
     glDispatchCompute(sizev4 / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GPU_CHECK();
+    innerDNN_GPU_CHECK();
 
     innerDNN_shaders_matxvec_trans_vec4(
         prog, r, xr, ffn_receptance,
@@ -925,7 +925,7 @@ void innerDNN_shaders_rwkv_ffn(
 }
 
 void innerDNN_shaders_rwkv_input(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint x,
     int token,
     float* token_embedding_table,
@@ -942,7 +942,7 @@ void innerDNN_shaders_rwkv_input(
 }
 
 void innerDNN_shaders_rwkv_output(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint logit,
     GLuint x,
     GLuint weight,
@@ -967,7 +967,7 @@ void innerDNN_shaders_rwkv_output(
 }
 
 void innerDNN_shaders_rwkv_layer(
-    shaderPrograms* prog,
+    innerDNN_shader_programs* prog,
     GLuint x,
     GLuint aa,
     GLuint bb,
