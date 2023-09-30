@@ -97,14 +97,6 @@ void innerDNN_shaders_deleteProgram(innerDNN_shader_programs* prog) {
     glDeleteProgram(prog->shader_rwkv_carry);
 }
 
-int innerDNN_getBufferVec4(int size) {
-    int n = size / 4;
-    if (size % 4 != 0) {
-        n += 1;
-    }
-    return n * 4;
-}
-
 // 归约法
 void innerDNN_shaders_reduce_step(
     GLuint kernel,

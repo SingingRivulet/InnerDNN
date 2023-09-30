@@ -11,6 +11,51 @@ typedef struct {
 } innerDNN_model_rwkv_state;
 
 typedef struct {
+    float* token_embedding_table;
+
+    int dim;
+    int dim_hidden;
+    int numLayer;
+    // 储存参数是对齐vec4的
+    int dim_vec4;
+    int dim_hidden_vec4;
+    int weightMat_len;
+    // 隐含层的尺寸（同样是对齐vec4）
+    int ffn_key_len;
+    int ffn_value_len;
+} innerDNN_model_rwkv_weights_def;
+
+typedef struct {
+    float* att_norm_weight;
+    float* att_norm_bias;
+    float* att_time_first;
+    float* att_time_decay;
+    float* att_time_mix_k;
+    float* att_time_mix_v;
+    float* att_time_mix_r;
+    float* att_output;
+    float* att_receptance;
+    float* att_key;
+    float* att_value;
+    float* ffn_time_mix_k;
+    float* ffn_time_mix_r;
+    float* ffn_norm_weight;
+    float* ffn_norm_bias;
+    float* ffn_receptance;
+    float* ffn_key;
+    float* ffn_value;
+
+    float* input_weight;
+    float* input_bias;
+
+    float* output_weight;
+    float* output_bias;
+    float* output_head;
+
+    innerDNN_model_rwkv_weights_def* def;
+} innerDNN_model_rwkv_weights_local;
+
+typedef struct {
     GLuint att_norm_weight;
     GLuint att_norm_bias;
     GLuint att_time_first;
@@ -37,19 +82,8 @@ typedef struct {
     GLuint output_bias;
     GLuint output_head;
 
-    float* token_embedding_table;
-
-    int dim;
-    int dim_hidden;
-    int numLayer;
-    // 储存参数是对齐vec4的
-    int dim_vec4;
-    int dim_hidden_vec4;
-    int weightMat_len;
-    // 隐含层的尺寸（同样是对齐vec4）
-    int ffn_key_len;
-    int ffn_value_len;
-} innerDNN_model_rwkv_weights;
+    innerDNN_model_rwkv_weights_def* def;
+} innerDNN_model_rwkv_weights_gpu;
 
 typedef struct {
     GLuint buffer[15];
@@ -58,25 +92,27 @@ typedef struct {
     GLuint logit;
 } innerDNN_model_rwkv_buffer;
 
-void innerDNN_model_rwkv_weights_init();
-void innerDNN_model_rwkv_weights_release();
+void innerDNN_model_rwkv_weights_init(
+    innerDNN_model_rwkv_weights_gpu* weights,
+    innerDNN_model_rwkv_weights_local* weights_local);
+void innerDNN_model_rwkv_weights_release(innerDNN_model_rwkv_weights_gpu* weights);
 
 void innerDNN_model_rwkv_state_init(
-    innerDNN_model_rwkv_weights* weights,
+    innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_state* state);
 void innerDNN_model_rwkv_state_release(
-    innerDNN_model_rwkv_weights* weights,
+    innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_state* state);
 
 void innerDNN_model_rwkv_buffer_init(
-    innerDNN_model_rwkv_weights* weights,
+    innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_buffer* buffer);
 void innerDNN_model_rwkv_buffer_release(
-    innerDNN_model_rwkv_weights* weights,
+    innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_buffer* buffer);
 
 void innerDNN_model_rwkv_forward(
-    innerDNN_model_rwkv_weights* weights,
+    innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_state* state,
     innerDNN_model_rwkv_buffer* buffer,
     innerDNN_shader_programs* prog,

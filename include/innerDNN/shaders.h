@@ -38,7 +38,6 @@ typedef struct {
 
 void innerDNN_shaders_createProgram(innerDNN_shader_programs* program);
 void innerDNN_shaders_deleteProgram(innerDNN_shader_programs* prog);
-int innerDNN_getBufferVec4(int size);
 
 // 归约法
 void innerDNN_shaders_reduce_step(GLuint kernel,

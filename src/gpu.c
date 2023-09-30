@@ -8,7 +8,6 @@ void innerDNN_checkGPUError(int line) {
     }
 }
 
-
 void innerDNN_create_GPUContext(GPUContext* ctx) {
     ctx->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (ctx->display == EGL_NO_DISPLAY) {
@@ -52,7 +51,7 @@ void innerDNN_release_GPUContext(GPUContext* ctx) {
     eglTerminate(ctx->display);
 }
 
-//加载着色器
+// 加载着色器
 
 GLuint innerDNN_shaders_loadShader(GLenum shaderType, const char* pSource) {
     GLuint shader = glCreateShader(shaderType);
@@ -110,4 +109,68 @@ GLuint innerDNN_shaders_createComputeProgram(const char* pComputeSource) {
         }
     }
     return program;
+}
+
+int innerDNN_getBufferVec4(int size) {
+    int n = size / 4;
+    if (size % 4 != 0) {
+        n += 1;
+    }
+    return n * 4;
+}
+
+void innerDNN_copyLocalVec(float* out, float* src, int n_layers, int dim, int dim_vec4) {
+    int i, j, l;
+    for (l = 0; l < n_layers; ++l) {
+        for (i = 0; i < dim; ++i) {
+            float val = src[l * dim + i];
+            out[l * dim_vec4 + i] = val;
+        }
+    }
+}
+
+void innerDNN_copyLocalMat(float* out, float* src, int n_layers, int dim_i, int dim_j, int rdim) {
+    int i, j, l;
+    for (l = 0; l < n_layers; ++l) {
+        for (i = 0; i < dim_i; ++i) {
+            for (j = 0; j < dim_j; ++j) {
+                float val = src[l * dim_i * dim_j + j * dim_i + i];
+                out[l * rdim * dim_i + i * rdim + j] = val;
+            }
+            for (; j < rdim; ++j) {
+                out[l * rdim * dim_i + i * rdim + j] = 0;
+            }
+        }
+    }
+}
+
+GLuint innerDNN_create_GPU_weight(float* buffer, int len_gpu) {
+    GLuint remote_w;
+    innerDNN_create_GPU_buffer(remote_w, len_gpu, GL_STATIC_DRAW, buffer);
+    return remote_w;
+}
+
+// 创建vec4形式的gpu矩阵
+// 因为是矩阵，输入需要严格的长度
+// 输出对齐vec4，多余的丢弃
+GLuint innerDNN_create_GPU_weight_vec4(float* local_w, int output_dim, int input_dim, int n_layers) {
+    int output_dim_vec4 = innerDNN_getBufferVec4(output_dim);
+    int len_gpu = sizeof(float) * n_layers * input_dim * output_dim_vec4;
+    float* tmp = (float*)malloc(len_gpu);
+    GLuint remote_w;
+    innerDNN_copyLocalMat(tmp, local_w, n_layers, input_dim, output_dim, output_dim_vec4);
+    innerDNN_create_GPU_buffer(remote_w, len_gpu, GL_STATIC_DRAW, tmp);
+    free(tmp);
+    return remote_w;
+}
+
+GLuint innerDNN_create_GPU_tensor_vec4(float* local_w, int dim, int n_layers) {
+    int dim_vec4 = innerDNN_getBufferVec4(dim);
+    int len_gpu = sizeof(float) * n_layers * dim_vec4;
+    float* tmp = (float*)malloc(len_gpu);
+    GLuint remote_w;
+    innerDNN_copyLocalVec(tmp, local_w, n_layers, dim, dim_vec4);
+    innerDNN_create_GPU_buffer(remote_w, len_gpu, GL_STATIC_DRAW, tmp);
+    free(tmp);
+    return remote_w;
 }
