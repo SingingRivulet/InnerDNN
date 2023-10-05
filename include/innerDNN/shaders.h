@@ -308,6 +308,7 @@ void innerDNN_shaders_rwkv_output(
     GLuint cache_2,
     GLuint cache_3,
     int size,
+    int size_output,
     int vec_offset,
     int mat_offset);
 void innerDNN_shaders_rwkv_input(

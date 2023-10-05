@@ -1,10 +1,109 @@
 #include "model_rwkv.h"
 
 void innerDNN_model_rwkv_loadWeightsFromBuffer(
-    innerDNN_model_rwkv_weights_local* weight,
+    innerDNN_model_rwkv_weights_local* weights,
     innerDNN_model_rwkv_weights_def* def,
-    float* buffer,
-    int bufferSize) {}
+    void* buffer,
+    int bufferSize) {
+    innerDNN_model_rwkv_fileData* data = (innerDNN_model_rwkv_fileData*)buffer;
+    void* endPtr = ((char*)buffer) + bufferSize;  // 结束位置
+    // 设置数据
+    def->dim = data->dim;
+    def->dim_hidden = data->dim_hidden;
+    def->dim_output = data->dim_output;
+    def->numLayer = data->numLayer;
+    def->embedding_size = data->embedding_size;
+    def->dim_hidden_vec4 = innerDNN_getBufferVec4(def->dim_hidden);
+    def->dim_vec4 = innerDNN_getBufferVec4(def->dim);
+    def->dim_output_vec4 = innerDNN_getBufferVec4(def->dim_output);
+    def->ffn_key_len = def->dim_hidden_vec4 * def->dim;
+    def->ffn_value_len = def->dim_hidden * def->dim_vec4;
+    def->weightMat_len = def->dim * def->dim_vec4;
+    weights->def = def;
+    // 读取数据
+    const int tensor_size = def->dim;
+    const int linear_mat_size = def->dim * def->dim;
+    const int hidden_linear_mat_size = def->dim * def->dim_hidden;
+    const int output_linear_mat_size = def->dim * def->dim_output;
+    const int embeddingTable_size = def->embedding_size * def->dim;
+
+#define shiftPtr(dis) \
+    ptr += dis;
+
+    float* ptr = data->data;
+
+    def->token_embedding_table = ptr;
+    shiftPtr(embeddingTable_size);
+
+    weights->att_norm_weight = ptr;
+    shiftPtr(tensor_size);
+
+    weights->att_norm_bias = ptr;
+    shiftPtr(tensor_size);
+
+    weights->att_time_first = ptr;
+    shiftPtr(tensor_size);
+
+    weights->att_time_decay = ptr;
+    shiftPtr(tensor_size);
+
+    weights->att_time_mix_k = ptr;
+    shiftPtr(tensor_size);
+
+    weights->att_time_mix_v = ptr;
+    shiftPtr(tensor_size);
+
+    weights->att_time_mix_r = ptr;
+    shiftPtr(tensor_size);
+
+    weights->att_output = ptr;
+    shiftPtr(linear_mat_size);
+
+    weights->att_receptance = ptr;
+    shiftPtr(linear_mat_size);
+
+    weights->att_key = ptr;
+    shiftPtr(linear_mat_size);
+
+    weights->att_value = ptr;
+    shiftPtr(linear_mat_size);
+
+    weights->ffn_time_mix_k = ptr;
+    shiftPtr(tensor_size);
+
+    weights->ffn_time_mix_r = ptr;
+    shiftPtr(tensor_size);
+
+    weights->ffn_norm_weight = ptr;
+    shiftPtr(tensor_size);
+
+    weights->ffn_norm_bias = ptr;
+    shiftPtr(tensor_size);
+
+    weights->ffn_receptance = ptr;
+    shiftPtr(linear_mat_size);
+
+    weights->ffn_key = ptr;
+    shiftPtr(hidden_linear_mat_size);
+
+    weights->ffn_value = ptr;
+    shiftPtr(hidden_linear_mat_size);
+
+    weights->input_weight = ptr;
+    shiftPtr(tensor_size);
+
+    weights->input_bias = ptr;
+    shiftPtr(tensor_size);
+
+    weights->output_weight = ptr;
+    shiftPtr(tensor_size);
+
+    weights->output_bias = ptr;
+    shiftPtr(tensor_size);
+
+    weights->output_head = ptr;
+    shiftPtr(output_linear_mat_size);
+}
 
 void innerDNN_model_rwkv_weights_upload(
     innerDNN_model_rwkv_weights_gpu* weights,
@@ -13,6 +112,7 @@ void innerDNN_model_rwkv_weights_upload(
     weights->def = weights_local->def;
     weights->def->dim_hidden_vec4 = innerDNN_getBufferVec4(weights->def->dim_hidden);
     weights->def->dim_vec4 = innerDNN_getBufferVec4(weights->def->dim);
+    weights->def->dim_output_vec4 = innerDNN_getBufferVec4(weights->def->dim_output);
     weights->def->ffn_key_len = weights->def->dim_hidden_vec4 * weights->def->dim;
     weights->def->ffn_value_len = weights->def->dim_hidden * weights->def->dim_vec4;
     weights->def->weightMat_len = weights->def->dim * weights->def->dim_vec4;
@@ -42,7 +142,7 @@ void innerDNN_model_rwkv_weights_upload(
 
     weights->output_weight = innerDNN_create_GPU_tensor_vec4(weights_local->output_weight, weights->def->dim, 1);
     weights->output_bias = innerDNN_create_GPU_tensor_vec4(weights_local->output_bias, weights->def->dim, 1);
-    weights->output_head = innerDNN_create_GPU_weight_vec4(weights_local->output_head, weights->def->dim, weights->def->dim, 1);
+    weights->output_head = innerDNN_create_GPU_weight_vec4(weights_local->output_head, weights->def->dim_output, weights->def->dim, 1);
 }
 
 void innerDNN_model_rwkv_weights_release(innerDNN_model_rwkv_weights_gpu* weights) {
@@ -78,7 +178,7 @@ void innerDNN_model_rwkv_buffer_init(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_buffer* buffer) {
     innerDNN_create_GPU_buffer(buffer->x, weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(buffer->logit, weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(buffer->logit, weights->def->dim_output_vec4, GL_DYNAMIC_DRAW, NULL);
     for (int i = 0; i < 15; ++i) {
         innerDNN_create_GPU_buffer(buffer->buffer[i], weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
     }
@@ -167,7 +267,7 @@ void innerDNN_model_rwkv_forward(
             buffer->buffer_hidden,
 
             weights->def->dim,
-            weights->def->dim_hidden_vec4,
+            weights->def->dim_hidden,
             weights->def->dim_vec4 * i,
             weights->def->weightMat_len * i,
             weights->def->ffn_key_len * i,
@@ -180,5 +280,5 @@ void innerDNN_model_rwkv_forward(
         weights->output_weight, weights->output_bias,
         weights->output_head,
         buffer->buffer[0], buffer->buffer[1], buffer->buffer[2], buffer->buffer[3],
-        weights->def->dim, 0, 0);
+        weights->def->dim, weights->def->dim_output, 0, 0);
 }

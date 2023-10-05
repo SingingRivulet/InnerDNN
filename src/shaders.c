@@ -949,16 +949,18 @@ void innerDNN_shaders_rwkv_output(
     GLuint cache_2,
     GLuint cache_3,
     int size,
+    int size_output,
     int vec_offset,
     int mat_offset) {
     int sizev4 = innerDNN_getBufferVec4(size);
+    int size_output_v4 = innerDNN_getBufferVec4(size_output);
     innerDNN_shaders_layerNorm(
         prog, x_norm, x,
         weight, bias,
         size, vec_offset, cache_1, cache_2, cache_3);
     innerDNN_shaders_matxvec_trans_vec4(
         prog, logit, x_norm, head,
-        sizev4,
+        size_output_v4,
         size, 0, mat_offset);
 }
 

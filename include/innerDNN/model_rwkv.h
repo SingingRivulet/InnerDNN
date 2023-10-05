@@ -15,10 +15,13 @@ typedef struct {
 
     int dim;
     int dim_hidden;
+    int dim_output;
     int numLayer;
+    int embedding_size;
     // 储存参数是对齐vec4的
     int dim_vec4;
     int dim_hidden_vec4;
+    int dim_output_vec4;
     int weightMat_len;
     // 隐含层的尺寸（同样是对齐vec4）
     int ffn_key_len;
@@ -92,10 +95,19 @@ typedef struct {
     GLuint logit;
 } innerDNN_model_rwkv_buffer;
 
+typedef struct {
+    int dim;
+    int dim_hidden;
+    int dim_output;
+    int numLayer;
+    int embedding_size;
+    float data[];
+} innerDNN_model_rwkv_fileData;
+
 void innerDNN_model_rwkv_loadWeightsFromBuffer(
     innerDNN_model_rwkv_weights_local* weight,
     innerDNN_model_rwkv_weights_def* def,
-    float* buffer,
+    void* buffer,
     int bufferSize);
 
 void innerDNN_model_rwkv_weights_upload(
