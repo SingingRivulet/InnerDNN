@@ -81,7 +81,7 @@ GLuint innerDNN_shaders_loadShader(GLenum shaderType, const char* pSource) {
 }
 
 GLuint innerDNN_shaders_createComputeProgram(const char* pComputeSource) {
-    GLuint computeShader = loadShader(GL_COMPUTE_SHADER, pComputeSource);
+    GLuint computeShader = innerDNN_shaders_loadShader(GL_COMPUTE_SHADER, pComputeSource);
     if (!computeShader) {
         return 0;
     }

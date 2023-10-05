@@ -1,4 +1,5 @@
-#include "win.h"
+#ifdef _WIN32
+#include "innerDNN/win.h"
 #include <errno.h>
 #include <io.h>
 
@@ -178,3 +179,4 @@ int clock_gettime(int clk_id, struct timespec *tp) {
     tp->tv_nsec = (ticks % 1000) * 1000000;
     return 0;
 }
+#endif

@@ -1,1 +1,1 @@
-#include "model_gpt.h"
+#include "innerDNN/model_gpt.h"

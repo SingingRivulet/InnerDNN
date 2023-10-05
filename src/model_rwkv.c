@@ -1,4 +1,4 @@
-#include "model_rwkv.h"
+#include "innerDNN/model_rwkv.h"
 
 void innerDNN_model_rwkv_loadWeightsFromBuffer(
     innerDNN_model_rwkv_weights_local* weights,

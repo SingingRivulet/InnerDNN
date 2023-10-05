@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void innerDNN_checkGPUError(int line);
 
