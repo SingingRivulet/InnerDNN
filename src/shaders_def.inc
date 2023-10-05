@@ -65,7 +65,7 @@ static const char* shader_variance_before_sum =
     "    float data[];\n"
     "} a;\n"
 
-    "layout(binding = 1) writeonly buffer Output0{\n"
+    "layout(binding = 1) readonly buffer Output0{\n"
     "    float data[];\n"
     "} sum;\n"
 
@@ -636,11 +636,11 @@ static const char* shader_rwkv_carry =
     "    vec4 data[];\n"
     "} xx;\n"
 
-    "layout(binding = 1) readonly buffer Input0{\n"
+    "layout(binding = 1) readonly buffer Input1{\n"
     "    vec4 data[];\n"
     "} x;\n"
 
-    "layout(binding = 2) writeonly buffer Input0{\n"
+    "layout(binding = 2) writeonly buffer Output0{\n"
     "    vec4 data[];\n"
     "} x_prev;\n"
     
@@ -690,22 +690,22 @@ static const char* shader_rwkv_att_wkv =
 
     "void main(){\n"
     "    int index = int(gl_GlobalInvocationID.x);\n"
-    "    vec4 pp_v = pp.data[index+offect];\n"
+    "    vec4 pp_v = pp.data[index+offset];\n"
     "    vec4 k_v = k.data[index];\n"
     "    vec4 v_v = v.data[index];\n"
-    "    vec4 ww = att_time_first.data[index+offect] + k_v;\n"
+    "    vec4 ww = att_time_first.data[index+offset] + k_v;\n"
     "    vec4 qq = max(ww , pp_v);\n"
     "    vec4 e1 = exp(pp_v - qq);\n"
     "    vec4 e2 = exp(ww   - qq);\n"
-    "    vec4 a = e1 * aa.data[index+offect] + e2 * v_v;\n"
-    "    vec4 b = e1 * bb.data[index+offect] + e2;\n"
-    "    ww = pp.data[index+offect] + att_time_decay.data[index+offect];\n"
+    "    vec4 a = e1 * aa.data[index+offset] + e2 * v_v;\n"
+    "    vec4 b = e1 * bb.data[index+offset] + e2;\n"
+    "    ww = pp.data[index+offset] + att_time_decay.data[index+offset];\n"
     "    qq = max(ww, k_v);\n"
     "    e1 = exp(ww - qq);\n"
     "    e2 = exp(k_v - qq);\n"
-    "    aa.data[index+offect] = e1 * aa.data[index+offect] + e2 * v_v;\n"
-    "    bb.data[index+offect] = e1 * bb.data[index+offect] + e2;\n"
-    "    pp.data[index+offect] = qq;\n"
+    "    aa.data[index+offset] = e1 * aa.data[index+offset] + e2 * v_v;\n"
+    "    bb.data[index+offset] = e1 * bb.data[index+offset] + e2;\n"
+    "    pp.data[index+offset] = qq;\n"
     "    wkv.data[index]= a/b;\n"
     "}\n";
 
@@ -751,9 +751,9 @@ static const char* shader_rwkv_att_rkv =
     "    int index = int(gl_GlobalInvocationID.x);\n"
     "    vec4 x_v = x.data[index];\n"
     "    vec4 x_prev_v = x_prev.data[index];\n"
-    "    vec4 time_mix_k_v = time_mix_k.data[index+offect];\n"
-    "    vec4 time_mix_v_v = time_mix_v.data[index+offect];\n"
-    "    vec4 time_mix_r_v = time_mix_r.data[index+offect];\n"
+    "    vec4 time_mix_k_v = time_mix_k.data[index+offset];\n"
+    "    vec4 time_mix_v_v = time_mix_v.data[index+offset];\n"
+    "    vec4 time_mix_r_v = time_mix_r.data[index+offset];\n"
     "    xk.data[index] = x_v * time_mix_k_v + x_prev_v * (vec4(1.)-time_mix_k_v);\n"
     "    xv.data[index] = x_v * time_mix_v_v + x_prev_v * (vec4(1.)-time_mix_v_v);\n"
     "    xr.data[index] = x_v * time_mix_r_v + x_prev_v * (vec4(1.)-time_mix_r_v);\n"
@@ -793,8 +793,8 @@ static const char* shader_rwkv_ffn =
     "    int index = int(gl_GlobalInvocationID.x);\n"
     "    vec4 x_v = x.data[index];\n"
     "    vec4 x_prev_v = x_prev.data[index];\n"
-    "    vec4 time_mix_k_v = time_mix_k.data[index+offect];\n"
-    "    vec4 time_mix_r_v = time_mix_r.data[index+offect];\n"
+    "    vec4 time_mix_k_v = time_mix_k.data[index+offset];\n"
+    "    vec4 time_mix_r_v = time_mix_r.data[index+offset];\n"
     "    xk.data[index] = x_v * time_mix_k_v + x_prev_v * (vec4(1.) - time_mix_k_v);\n"
     "    xr.data[index] = x_v * time_mix_r_v + x_prev_v * (vec4(1.) - time_mix_r_v);\n"
     "}";
@@ -832,11 +832,11 @@ static const char* shader_vecxvec =
 
     "layout(binding = 2) writeonly buffer Output0{\n"
     "    vec4 data[];\n"
-    "} out;\n"
+    "} xout;\n"
 
     "void main(){\n"
     "    int index = int(gl_GlobalInvocationID.x);\n"
-    "    out.data[index] = a.data[index] * b.data[index];\n"
+    "    xout.data[index] = a.data[index] * b.data[index];\n"
     "}";
 
 static const char* shader_reluAndsqr =

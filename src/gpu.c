@@ -8,7 +8,7 @@ void innerDNN_checkGPUError(int line) {
     }
 }
 
-void innerDNN_create_GPUContext(GPUContext* ctx) {
+void innerDNN_create_GPUContext(innerDNN_GPUContext* ctx) {
     ctx->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (ctx->display == EGL_NO_DISPLAY) {
         printf("eglGetDisplay returned EGL_NO_DISPLAY.\n");
@@ -46,7 +46,7 @@ void innerDNN_create_GPUContext(GPUContext* ctx) {
     }
 }
 
-void innerDNN_release_GPUContext(GPUContext* ctx) {
+void innerDNN_release_GPUContext(innerDNN_GPUContext* ctx) {
     eglDestroyContext(ctx->display, ctx->context);
     eglTerminate(ctx->display);
 }

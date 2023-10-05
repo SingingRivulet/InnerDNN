@@ -21,11 +21,11 @@ void innerDNN_checkGPUError(int line);
 typedef struct {
     EGLContext context;
     EGLDisplay display;
-} GPUContext;
+} innerDNN_GPUContext;
 
 // 初始化gpu
-void innerDNN_create_GPUContext(GPUContext* ctx);
-void innerDNN_release_GPUContext(GPUContext* ctx);
+void innerDNN_create_GPUContext(innerDNN_GPUContext* ctx);
+void innerDNN_release_GPUContext(innerDNN_GPUContext* ctx);
 
 // 加载shader
 GLuint innerDNN_shaders_loadShader(GLenum shaderType, const char* pSource);
