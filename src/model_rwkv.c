@@ -36,58 +36,58 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     shiftPtr(embeddingTable_size);
 
     weights->att_norm_weight = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->att_norm_bias = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->att_time_first = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->att_time_decay = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->att_time_mix_k = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->att_time_mix_v = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->att_time_mix_r = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->att_output = ptr;
-    shiftPtr(linear_mat_size);
+    shiftPtr(linear_mat_size * def->numLayer);
 
     weights->att_receptance = ptr;
-    shiftPtr(linear_mat_size);
+    shiftPtr(linear_mat_size * def->numLayer);
 
     weights->att_key = ptr;
-    shiftPtr(linear_mat_size);
+    shiftPtr(linear_mat_size * def->numLayer);
 
     weights->att_value = ptr;
-    shiftPtr(linear_mat_size);
+    shiftPtr(linear_mat_size * def->numLayer);
 
     weights->ffn_time_mix_k = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->ffn_time_mix_r = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->ffn_norm_weight = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->ffn_norm_bias = ptr;
-    shiftPtr(tensor_size);
+    shiftPtr(tensor_size * def->numLayer);
 
     weights->ffn_receptance = ptr;
-    shiftPtr(linear_mat_size);
+    shiftPtr(linear_mat_size * def->numLayer);
 
     weights->ffn_key = ptr;
-    shiftPtr(hidden_linear_mat_size);
+    shiftPtr(hidden_linear_mat_size * def->numLayer);
 
     weights->ffn_value = ptr;
-    shiftPtr(hidden_linear_mat_size);
+    shiftPtr(hidden_linear_mat_size * def->numLayer);
 
     weights->input_weight = ptr;
     shiftPtr(tensor_size);
