@@ -1,4 +1,6 @@
 #include "innerDNN/model_rwkv.h"
+
+// 初始化一个随机的模型，并保存
 void test_randmodel() {
     innerDNN_shader_programs programs;  // shader
 
@@ -100,6 +102,7 @@ void test_randmodel() {
     free(weights_local.output_head);
 }
 
+// 从数组初始化模型
 void test_loadModel_fromBuffer(void* inbuffer, ssize_t size) {
     innerDNN_shader_programs programs;  // shader
 
@@ -127,7 +130,8 @@ void test_loadModel_fromBuffer(void* inbuffer, ssize_t size) {
     innerDNN_shaders_deleteProgram(&programs);
 }
 
-void test_loadModel() {  // 把文件映射到内存
+// 加载模型：把文件映射到内存
+void test_loadModel() {
     ssize_t file_size;
     const char* checkpoint = "test.innw";
     FILE* file = fopen(checkpoint, "rb");
@@ -161,8 +165,8 @@ void test_loadModel() {  // 把文件映射到内存
 int main() {
     innerDNN_GPUContext context;           // gpu上下文
     innerDNN_create_GPUContext(&context);  // 初始化gpu上下文
-    test_randmodel();
-    test_loadModel();
+    test_randmodel();                      // 测试随机模型
+    test_loadModel();                      // 测试加载模型
     innerDNN_release_GPUContext(&context);
     return 0;
 }
