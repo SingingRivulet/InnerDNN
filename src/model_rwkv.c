@@ -237,6 +237,8 @@ void innerDNN_model_rwkv_forward(
         buffer->buffer[0], buffer->buffer[1], buffer->buffer[2],
         weights->def->dim);
 
+    innerDNN_GPU_CHECK();
+
     for (i = 0; i < weights->def->numLayer; ++i) {
         innerDNN_shaders_rwkv_layer(
             prog,
@@ -272,6 +274,7 @@ void innerDNN_model_rwkv_forward(
             weights->def->weightMat_len * i,
             weights->def->ffn_key_len * i,
             weights->def->ffn_value_len * i);
+        innerDNN_GPU_CHECK();
     }
 
     innerDNN_shaders_rwkv_output(
@@ -281,4 +284,5 @@ void innerDNN_model_rwkv_forward(
         weights->output_head,
         buffer->buffer[0], buffer->buffer[1], buffer->buffer[2], buffer->buffer[3],
         weights->def->dim, weights->def->dim_output, 0, 0);
+    innerDNN_GPU_CHECK();
 }

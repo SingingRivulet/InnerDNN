@@ -24,6 +24,7 @@ int main() {
     const int embeddingTable_size = model_def.embedding_size * model_def.dim * sizeof(float);
     // 创建权重矩阵
     model_def.token_embedding_table = malloc(embeddingTable_size);
+    weights_local.def = &model_def;
     weights_local.att_norm_weight = malloc(tensor_size * model_def.numLayer);
     weights_local.att_norm_bias = malloc(tensor_size * model_def.numLayer);
     weights_local.att_time_first = malloc(tensor_size * model_def.numLayer);
@@ -55,6 +56,8 @@ int main() {
     innerDNN_model_rwkv_weights_upload(&weights_gpu, &weights_local);  // 上传权重
     innerDNN_model_rwkv_buffer_init(&weights_gpu, &buffer);            // 构建buffer
     innerDNN_model_rwkv_state_init(&weights_gpu, &state);              // 创建状态
+
+    innerDNN_model_rwkv_forward(&weights_gpu, &state, &buffer, &programs, 1);  // 模型推理
 
     // 释放gpu端
     innerDNN_model_rwkv_state_release(&weights_gpu, &state);
