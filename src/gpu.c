@@ -47,7 +47,9 @@ void innerDNN_create_GPUContext(innerDNN_GPUContext* ctx) {
 }
 
 void innerDNN_release_GPUContext(innerDNN_GPUContext* ctx) {
+    eglMakeCurrent(ctx->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglDestroyContext(ctx->display, ctx->context);
+    eglReleaseThread();
     eglTerminate(ctx->display);
 }
 

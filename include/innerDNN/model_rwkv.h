@@ -95,20 +95,29 @@ typedef struct {
     GLuint logit;
 } innerDNN_model_rwkv_buffer;
 
+#pragma pack(push, 1)
 typedef struct {
     int dim;
     int dim_hidden;
     int dim_output;
     int numLayer;
     int embedding_size;
+} innerDNN_model_rwkv_fileData_header;
+typedef struct {
+    innerDNN_model_rwkv_fileData_header header;
     float data[];
 } innerDNN_model_rwkv_fileData;
+#pragma pack(pop)
+
+void innerDNN_model_rwkv_saveWeightsToFile(
+    FILE* file,
+    innerDNN_model_rwkv_weights_local* weights_local);
 
 void innerDNN_model_rwkv_loadWeightsFromBuffer(
     innerDNN_model_rwkv_weights_local* weight,
     innerDNN_model_rwkv_weights_def* def,
     void* buffer,
-    int bufferSize);
+    ssize_t bufferSize);
 
 void innerDNN_model_rwkv_weights_upload(
     innerDNN_model_rwkv_weights_gpu* weights,

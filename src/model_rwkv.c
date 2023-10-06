@@ -4,15 +4,15 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     innerDNN_model_rwkv_weights_local* weights,
     innerDNN_model_rwkv_weights_def* def,
     void* buffer,
-    int bufferSize) {
+    ssize_t bufferSize) {
     innerDNN_model_rwkv_fileData* data = (innerDNN_model_rwkv_fileData*)buffer;
     void* endPtr = ((char*)buffer) + bufferSize;  // 结束位置
     // 设置数据
-    def->dim = data->dim;
-    def->dim_hidden = data->dim_hidden;
-    def->dim_output = data->dim_output;
-    def->numLayer = data->numLayer;
-    def->embedding_size = data->embedding_size;
+    def->dim = data->header.dim;
+    def->dim_hidden = data->header.dim_hidden;
+    def->dim_output = data->header.dim_output;
+    def->numLayer = data->header.numLayer;
+    def->embedding_size = data->header.embedding_size;
     def->dim_hidden_vec4 = innerDNN_getBufferVec4(def->dim_hidden);
     def->dim_vec4 = innerDNN_getBufferVec4(def->dim);
     def->dim_output_vec4 = innerDNN_getBufferVec4(def->dim_output);
@@ -105,6 +105,52 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     shiftPtr(output_linear_mat_size);
 }
 
+void innerDNN_model_rwkv_saveWeightsToFile(
+    FILE* file,
+    innerDNN_model_rwkv_weights_local* weights_local) {
+    // 写入文件头
+    innerDNN_model_rwkv_fileData_header header;
+    header.dim = weights_local->def->dim;
+    header.dim_hidden = weights_local->def->dim_hidden;
+    header.dim_output = weights_local->def->dim_output;
+    header.embedding_size = weights_local->def->embedding_size;
+    header.numLayer = weights_local->def->numLayer;
+    fwrite(&header, sizeof(header), 1, file);
+    // 计算权重大小
+    const int tensor_size = header.dim * sizeof(float);
+    const int linear_mat_size = header.dim * header.dim * sizeof(float);
+    const int hidden_linear_mat_size = header.dim * header.dim_hidden * sizeof(float);
+    const int output_linear_mat_size = header.dim * header.dim_output * sizeof(float);
+    const int embeddingTable_size = header.embedding_size * header.dim * sizeof(float);
+    // 写入权重矩阵
+#define writeMat(w, size) fwrite(w, size, 1, file);
+    writeMat(weights_local->def->token_embedding_table, embeddingTable_size);
+    writeMat(weights_local->att_norm_weight, tensor_size * header.numLayer);
+    writeMat(weights_local->att_norm_bias, tensor_size * header.numLayer);
+    writeMat(weights_local->att_time_first, tensor_size * header.numLayer);
+    writeMat(weights_local->att_time_decay, tensor_size * header.numLayer);
+    writeMat(weights_local->att_time_mix_k, tensor_size * header.numLayer);
+    writeMat(weights_local->att_time_mix_v, tensor_size * header.numLayer);
+    writeMat(weights_local->att_time_mix_r, tensor_size * header.numLayer);
+    writeMat(weights_local->att_output, linear_mat_size * header.numLayer);
+    writeMat(weights_local->att_receptance, linear_mat_size * header.numLayer);
+    writeMat(weights_local->att_key, linear_mat_size * header.numLayer);
+    writeMat(weights_local->att_value, linear_mat_size * header.numLayer);
+    writeMat(weights_local->ffn_time_mix_k, tensor_size * header.numLayer);
+    writeMat(weights_local->ffn_time_mix_r, tensor_size * header.numLayer);
+    writeMat(weights_local->ffn_norm_weight, tensor_size * header.numLayer);
+    writeMat(weights_local->ffn_norm_bias, tensor_size * header.numLayer);
+    writeMat(weights_local->ffn_receptance, linear_mat_size * header.numLayer);
+    writeMat(weights_local->ffn_key, hidden_linear_mat_size * header.numLayer);
+    writeMat(weights_local->ffn_value, hidden_linear_mat_size * header.numLayer);
+    writeMat(weights_local->input_weight, tensor_size);
+    writeMat(weights_local->input_bias, tensor_size);
+    writeMat(weights_local->output_weight, tensor_size);
+    writeMat(weights_local->output_bias, tensor_size);
+    writeMat(weights_local->output_head, output_linear_mat_size);
+#undef writeMat
+}
+
 void innerDNN_model_rwkv_weights_upload(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_weights_local* weights_local) {
@@ -169,9 +215,6 @@ void innerDNN_model_rwkv_weights_release(innerDNN_model_rwkv_weights_gpu* weight
     glDeleteBuffers(1, &weights->output_weight);
     glDeleteBuffers(1, &weights->output_bias);
     glDeleteBuffers(1, &weights->output_head);
-
-    free(weights->def->token_embedding_table);
-    weights->def->token_embedding_table = NULL;
 }
 
 void innerDNN_model_rwkv_buffer_init(

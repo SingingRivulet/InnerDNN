@@ -405,7 +405,7 @@ static const char* shader_rmsnorm_normalize_and_scale_inplace =
     "    o.data[idx] = weight.data[idx+weight_offset] * (ss * o.data[idx]);\n"
     "}\n";
 
-static const char* shader_accum =
+static const char* shader_accum_vec4 =
     "#version 320 es\n"
     "layout(local_size_x = 1) in;\n"
 
@@ -454,7 +454,7 @@ static const char* shader_positionalEncoding =
     "    k.data[idx] = vec2(ki.x * fc.x - ki.y * fc.y , ki.x * fc.y + ki.y * fc.x);\n"
     "}\n";
 
-static const char* shader_transformer_silu_and_mulW3 =
+static const char* shader_transformer_silu_and_mulW3_vec4 =
     "#version 320 es\n"
     "layout(local_size_x = 1) in;\n"
 
@@ -626,7 +626,7 @@ static const char* shader_copyBuffer =
     "    dst.data[index+dst_offset] = src.data[index+src_offset];\n"
     "}\n";
 
-static const char* shader_rwkv_carry = 
+static const char* shader_rwkv_carry_vec4 = 
     "#version 320 es\n"
     "uniform int offset;\n"
 
@@ -650,7 +650,7 @@ static const char* shader_rwkv_carry =
     "    xx.data[index+offset] = x.data[index];\n"
     "}";
 
-static const char* shader_rwkv_att_wkv =
+static const char* shader_rwkv_att_wkv_vec4 =
     "#version 320 es\n"
     "uniform int offset;\n"
 
@@ -709,7 +709,7 @@ static const char* shader_rwkv_att_wkv =
     "    wkv.data[index]= a/b;\n"
     "}\n";
 
-static const char* shader_rwkv_att_rkv =
+static const char* shader_rwkv_att_rkv_vec4 =
     "#version 320 es\n"
     "uniform int offset;\n"
 
@@ -759,7 +759,7 @@ static const char* shader_rwkv_att_rkv =
     "    xr.data[index] = x_v * time_mix_r_v + x_prev_v * (vec4(1.)-time_mix_r_v);\n"
     "}\n";
 
-static const char* shader_rwkv_ffn =
+static const char* shader_rwkv_ffn_vec4 =
     "#version 320 es\n"
     "uniform int offset;\n"
 
@@ -799,7 +799,7 @@ static const char* shader_rwkv_ffn =
     "    xr.data[index] = x_v * time_mix_r_v + x_prev_v * (vec4(1.) - time_mix_r_v);\n"
     "}";
 
-static const char* shader_sigmoid =
+static const char* shader_sigmoid_vec4 =
     "#version 320 es\n"
 
     "layout(local_size_x = 1) in;\n"
@@ -817,7 +817,7 @@ static const char* shader_sigmoid =
     "    xout.data[index] = vec4(1.) / (vec4(1.) - exp(-x.data[index]));\n"
     "}";
 
-static const char* shader_vecxvec =
+static const char* shader_vecxvec_vec4 =
     "#version 320 es\n"
 
     "layout(local_size_x = 1) in;\n"
@@ -839,7 +839,7 @@ static const char* shader_vecxvec =
     "    xout.data[index] = a.data[index] * b.data[index];\n"
     "}";
 
-static const char* shader_reluAndsqr =
+static const char* shader_reluAndsqr_vec4 =
     "#version 320 es\n"
 
     "layout(local_size_x = 1) in;\n"

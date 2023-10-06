@@ -10,6 +10,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include "win.h"
+#else
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
+
 void innerDNN_checkGPUError(int line);
 
 #ifdef DEBUG
