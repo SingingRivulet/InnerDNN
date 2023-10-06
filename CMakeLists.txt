@@ -14,10 +14,13 @@ file(GLOB_RECURSE TEST_FILES "${PROJECT_SOURCE_DIR}/tests/*.c")
   
 # 创建静态库libInnerDNN.a  
 add_library(InnerDNN STATIC ${SRC_FILES})  
-  
+
 # 对于tests目录中的每个.c文件，创建一个可执行文件，并链接到libInnerDNN.a库  
 foreach(TEST_FILE ${TEST_FILES})  
     get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)  
+    set(OUTPUT_DIR ${PROJECT_BINARY_DIR}/test)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb")
     add_executable(${TEST_NAME} ${TEST_FILE})  
+    set_target_properties(${TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
     target_link_libraries(${TEST_NAME} InnerDNN m GLESv2 EGL)  
 endforeach()
