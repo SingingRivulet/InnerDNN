@@ -75,8 +75,8 @@ innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename) {
                     }
 
                     vocab->words[id].id = id;
-                    vocab->words[id].str = malloc(strlen(str->string) + 1);
-                    strcpy(vocab->words[id].str, str->string);
+                    vocab->words[id].str = malloc(strlen(str->valuestring) + 1);
+                    strcpy(vocab->words[id].str, str->valuestring);
                     vocab->words[id].score = score->valueint;
                     id++;
 
@@ -106,14 +106,14 @@ void innerDNN_bpe_releaseVocab(innerDNN_bpe_vocab* vocab) {
     free(vocab);
 }
 
-int innerDNN_bpe_encode(char* text, innerDNN_bpe_vocab* vocab, unsigned int max_token_length, innerDNN_bpe_vocab_item** tokens, int* n_tokens) {
+int innerDNN_bpe_encode(const char* text, innerDNN_bpe_vocab* vocab, unsigned int max_token_length, innerDNN_bpe_vocab_item** tokens, int* n_tokens) {
     int status = 1;
     // a temporary buffer to merge two consecutive tokens
     char* str_buffer = (char*)malloc((max_token_length * 2 + 1) * sizeof(char));  // *2 for concat, +1 for null terminator
 
     // first encode every individual byte in the input string
     *n_tokens = 0;  // the number of tokens
-    for (char* c = text; *c != '\0'; c++) {
+    for (const char* c = text; *c != '\0'; c++) {
         sprintf(str_buffer, "%c", *c);
         innerDNN_bpe_vocab_item* wd = innerDNN_bpe_str_lookup(str_buffer, vocab);
         if (wd == NULL) {
