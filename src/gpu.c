@@ -121,6 +121,22 @@ int innerDNN_getBufferVec4(int size) {
     return n * 4;
 }
 
+void innerDNN_dumpGPUArray(GLuint data_gpu, int offset, int n) {
+    // return the index that has the highest probability
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, data_gpu);
+    float* data = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, offset * sizeof(float),
+                                           n * sizeof(float), GL_MAP_READ_BIT);
+    innerDNN_GPU_CHECK();
+    if (data) {
+        for (int i = 0; i < n; i++) {
+            printf("%f ", data[i]);
+        }
+    }
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    innerDNN_GPU_CHECK();
+    printf("\n");
+}
+
 void innerDNN_copyLocalVec(float* out, float* src, int n_layers, int dim, int dim_vec4) {
     int i, j, l;
     for (l = 0; l < n_layers; ++l) {
