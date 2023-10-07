@@ -2,6 +2,17 @@
 #define INNER_DNN_BPE
 #include <string.h>
 #include "gpu.h"
-int innerDNN_bpe_str_lookup(char* str, char** vocab, int vocab_size);
-void innerDNN_bpe_bpe_encode(char* text, char** vocab, float* vocab_scores, int vocab_size, unsigned int max_token_length, int* tokens, int* n_tokens);
+typedef struct{
+    int id;
+    float score;
+    char * str;
+}innerDNN_bpe_vocab_item;
+typedef struct{
+    innerDNN_bpe_vocab * words;
+    int count;
+}innerDNN_bpe_vocab;
+innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename);
+void innerDNN_bpe_releaseVocab(innerDNN_bpe_vocab* vocab);
+innerDNN_bpe_vocab_item* innerDNN_bpe_str_lookup(char* str, innerDNN_bpe_vocab* vocab);
+int innerDNN_bpe_encode(char* text, innerDNN_bpe_vocab* vocab, unsigned int max_token_length, innerDNN_bpe_vocab_item* tokens, int* n_tokens);
 #endif
