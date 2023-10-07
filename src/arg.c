@@ -54,7 +54,7 @@ int innerDNN_sample(innerDNN_shader_programs* prog, GLuint probabilities_gpu, in
     innerDNN_GPU_CHECK();
     int res = n - 1;
     if (probabilities) {
-        float r = random_f32();
+        float r = innerDNN_random_f32();
         float cdf = 0.0f;
         for (int i = 0; i < n; i++) {
             cdf += probabilities[i];
@@ -109,7 +109,7 @@ int innerDNN_sample_topp(innerDNN_shader_programs* prog, GLuint probabilities_gp
         }
 
         // sample from the truncated list
-        float r = random_f32() * cumulative_prob;
+        float r = innerDNN_random_f32() * cumulative_prob;
         float cdf = 0.0f;
         for (int i = 0; i <= last_idx; i++) {
             cdf += innerDNN_probIndex[i].prob;
