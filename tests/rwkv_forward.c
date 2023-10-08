@@ -68,12 +68,12 @@ void test_randmodel() {
     float * att_xx = (float *)malloc(weights->def->dim_vec4*weights->def->numLayer*sizeof(float));
     float * ffn_xx = (float *)malloc(weights->def->dim_vec4*weights->def->numLayer*sizeof(float));
     innerDNN_model_rwkv_state_download(&weights_gpu, &state, aa, bb, pp, att_xx, ffn_xx);
+    innerDNN_model_rwkv_state_upload(&weights_gpu, &state, aa, bb, pp, att_xx, ffn_xx);
     free(aa);
     free(bb);
     free(pp);
     free(att_xx);
     free(ffn_xx);
-    innerDNN_model_rwkv_state_upload(&weights_gpu, &state, aa, bb, pp, att_xx, ffn_xx);
 
     // 释放gpu端
     innerDNN_model_rwkv_state_release(&weights_gpu, &state);
