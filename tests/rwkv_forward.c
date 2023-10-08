@@ -73,6 +73,7 @@ void test_randmodel() {
     free(pp);
     free(att_xx);
     free(ffn_xx);
+    innerDNN_model_rwkv_state_upload(&weights_gpu, &state, aa, bb, pp, att_xx, ffn_xx);
 
     // 释放gpu端
     innerDNN_model_rwkv_state_release(&weights_gpu, &state);
