@@ -265,6 +265,17 @@ void innerDNN_model_rwkv_state_init(
     innerDNN_create_GPU_buffer(state->ffn_xx, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
 }
 
+void innerDNN_model_rwkv_state_download(
+    innerDNN_model_rwkv_weights_gpu* weights,
+    innerDNN_model_rwkv_state* state,
+    float * aa, float * bb, float * pp, float * att_xx, float * ffn_xx) {
+    innerDNN_downloadGPUArray(aa, &state->aa, 0, weights->def->dim_vec4*weights->def->numLayer);
+    innerDNN_downloadGPUArray(bb, &state->bb, 0, weights->def->dim_vec4*weights->def->numLayer);
+    innerDNN_downloadGPUArray(pp, &state->pp, 0, weights->def->dim_vec4*weights->def->numLayer);
+    innerDNN_downloadGPUArray(att_xx, &state->att_xx, 0, weights->def->dim_vec4*weights->def->numLayer);
+    innerDNN_downloadGPUArray(ffn_xx, &state->ffn_xx, 0, weights->def->dim_vec4*weights->def->numLayer);
+}
+
 void innerDNN_model_rwkv_state_release(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_state* state) {

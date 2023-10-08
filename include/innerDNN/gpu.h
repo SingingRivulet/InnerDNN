@@ -54,6 +54,7 @@ void innerDNN_copyLocalVec(float* out, float* src, int n_layers, int dim, int di
 
 //显示向量
 void innerDNN_dumpGPUArray(GLuint data_gpu, int offset, int n);
+void innerDNN_downloadGPUArray(float * out, GLuint data_gpu, int offset, int n);
 
 // 创建远端数据
 GLuint innerDNN_create_GPU_weight(float* buffer, int len_gpu);

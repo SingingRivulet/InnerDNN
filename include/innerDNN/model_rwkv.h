@@ -136,6 +136,11 @@ void innerDNN_model_rwkv_state_set0(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_buffer* buffer);
 
+void innerDNN_model_rwkv_state_download(
+    innerDNN_model_rwkv_weights_gpu* weights,
+    innerDNN_model_rwkv_state* state,
+    float * aa, float * bb, float * pp, float * att_xx, float * ffn_xx);
+
 void innerDNN_model_rwkv_buffer_init(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_buffer* buffer);

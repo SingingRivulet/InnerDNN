@@ -57,7 +57,22 @@ void test_randmodel() {
     innerDNN_model_rwkv_buffer_init(&weights_gpu, &buffer);            // 构建buffer
     innerDNN_model_rwkv_state_init(&weights_gpu, &state);              // 创建状态
 
+    innerDNN_model_rwkv_state_set0(&programs, &weights_gpu, &buffer);
+
     innerDNN_model_rwkv_forward(&weights_gpu, &state, &buffer, &programs, 1);  // 模型推理
+
+    // 测试导出状态
+    float * aa = (float *)malloc(weights->def->dim_vec4*weights->def->numLayer*sizeof(float));
+    float * bb = (float *)malloc(weights->def->dim_vec4*weights->def->numLayer*sizeof(float));
+    float * pp = (float *)malloc(weights->def->dim_vec4*weights->def->numLayer*sizeof(float));
+    float * att_xx = (float *)malloc(weights->def->dim_vec4*weights->def->numLayer*sizeof(float));
+    float * ffn_xx = (float *)malloc(weights->def->dim_vec4*weights->def->numLayer*sizeof(float));
+    innerDNN_model_rwkv_state_download(&weights_gpu, &state, aa, bb, pp, att_xx, ffn_xx);
+    free(aa);
+    free(bb);
+    free(pp);
+    free(att_xx);
+    free(ffn_xx);
 
     // 释放gpu端
     innerDNN_model_rwkv_state_release(&weights_gpu, &state);
