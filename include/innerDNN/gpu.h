@@ -17,10 +17,10 @@
 #include <unistd.h>
 #endif
 
-void innerDNN_checkGPUError(int line);
+void innerDNN_checkGPUError(const char* filename, int line);
 
 #ifdef DEBUG
-#define innerDNN_GPU_CHECK() innerDNN_checkGPUError(__LINE__);
+#define innerDNN_GPU_CHECK() innerDNN_checkGPUError(__FILE__, __LINE__);
 #else
 #define innerDNN_GPU_CHECK()
 #endif
@@ -52,9 +52,9 @@ void innerDNN_copyLocalVec(float* out, float* src, int n_layers, int dim, int di
                  data, usage);                             \
     innerDNN_GPU_CHECK();
 
-//显示向量
+// 显示向量
 void innerDNN_dumpGPUArray(GLuint data_gpu, int offset, int n);
-void innerDNN_downloadGPUArray(float * out, GLuint data_gpu, int offset, int n);
+void innerDNN_downloadGPUArray(float* out, GLuint data_gpu, int offset, int n);
 
 // 创建远端数据
 GLuint innerDNN_create_GPU_weight(float* buffer, int len_gpu);

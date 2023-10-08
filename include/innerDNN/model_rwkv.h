@@ -134,7 +134,7 @@ void innerDNN_model_rwkv_state_release(
 void innerDNN_model_rwkv_state_set0(
     innerDNN_shader_programs* prog,
     innerDNN_model_rwkv_weights_gpu* weights,
-    innerDNN_model_rwkv_buffer* buffer);
+    innerDNN_model_rwkv_state* state);
 
 void innerDNN_model_rwkv_state_download(
     innerDNN_model_rwkv_weights_gpu* weights,

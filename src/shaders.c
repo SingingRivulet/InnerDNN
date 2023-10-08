@@ -306,6 +306,7 @@ void innerDNN_shaders_layerNorm(innerDNN_shader_programs* prog, GLuint o, GLuint
         prog->shader_sum, prog->shader_sum_vec4, prog->shader_sum,
         x, cache_1, cache_2, size, 1, &currentBuffer, NULL);
 
+    innerDNN_GPU_CHECK();
     // variance
     int currentStepSize = size;
     int nextStepSize = currentStepSize / 2;
@@ -976,10 +977,12 @@ void innerDNN_shaders_rwkv_output(
         prog, x_norm, x,
         weight, bias,
         size, vec_offset, cache_1, cache_2, cache_3);
+    innerDNN_GPU_CHECK();
     innerDNN_shaders_matxvec_trans_vec4(
         prog, logit, x_norm, head,
         size_output_v4,
         size, 0, mat_offset);
+    innerDNN_GPU_CHECK();
 }
 
 void innerDNN_shaders_rwkv_layer(
@@ -1028,7 +1031,9 @@ void innerDNN_shaders_rwkv_layer(
         caches[2], caches[3], caches[4], caches[5], caches[6], caches[7], caches[8], caches[9],
         caches[10], caches[11], caches[12], caches[13], caches[14],
         size, mat_offset, vec_offset);
+    innerDNN_GPU_CHECK();
     innerDNN_shaders_accum(prog, x, caches[0], sizev4);
+    innerDNN_GPU_CHECK();
     innerDNN_shaders_rwkv_ffn(
         prog, caches[0],
         ffn_time_mix_k, ffn_time_mix_r,
@@ -1041,5 +1046,7 @@ void innerDNN_shaders_rwkv_layer(
         caches[6], caches[7],
         caches[8], caches[9], caches[10],
         size, hidden_size, mat_offset, ffn_key_offset, ffn_value_offset, vec_offset);
+    innerDNN_GPU_CHECK();
     innerDNN_shaders_accum(prog, x, caches[0], sizev4);
+    innerDNN_GPU_CHECK();
 }

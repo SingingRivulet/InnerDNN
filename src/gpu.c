@@ -1,9 +1,29 @@
 #include "innerDNN/gpu.h"
 
-void innerDNN_checkGPUError(int line) {
+#ifdef DEBUG
+#include <execinfo.h>
+static void print_stacktrace() {
+    void* buffer[100];
+    int nptrs = backtrace(buffer, 100);
+    char** strings = backtrace_symbols(buffer, nptrs);
+    if (strings == NULL) {
+        perror("backtrace_symbols");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < nptrs; i++) {
+        printf("%s\n", strings[i]);
+    }
+    free(strings);
+}
+#endif
+
+void innerDNN_checkGPUError(const char* filename, int line) {
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        printf(__FILE__ ":%d glGetError returns %d\n", line, err);
+        printf("%s:%d glGetError returns %d\n", filename, line, err);
+#ifdef DEBUG
+        print_stacktrace();
+#endif
         exit(1);
     }
 }
@@ -137,7 +157,7 @@ void innerDNN_dumpGPUArray(GLuint data_gpu, int offset, int n) {
     printf("\n");
 }
 
-void innerDNN_downloadGPUArray(float * out, GLuint data_gpu, int offset, int n) {
+void innerDNN_downloadGPUArray(float* out, GLuint data_gpu, int offset, int n) {
     // return the index that has the highest probability
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, data_gpu);
     float* data = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, offset * sizeof(float),
