@@ -29,7 +29,7 @@ int main() {
             return 1;
         }
         // negative vocab size is hacky way of signaling unshared weights. bit yikes.
-        int shared_weights = config.vocab_size > 0 ? 1 : 0;
+        // int shared_weights = config.vocab_size > 0 ? 1 : 0;
         config.vocab_size = abs(config.vocab_size);
         // figure out the file size
         fseek(file, 0, SEEK_END);  // move file pointer to end of file
@@ -46,7 +46,7 @@ int main() {
             fprintf(stderr, "mmap failed!\n");
             return 1;
         }
-        float* weights_ptr = data + sizeof(Config) / sizeof(float);
+        // float* weights_ptr = data + sizeof(Config) / sizeof(float);
     }
 
     // read in the tokenizer.bin file

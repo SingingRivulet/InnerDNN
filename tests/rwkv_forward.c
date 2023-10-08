@@ -57,8 +57,10 @@ void test_randmodel() {
     innerDNN_model_rwkv_buffer_init(&weights_gpu, &buffer);            // 构建buffer
     innerDNN_model_rwkv_state_init(&weights_gpu, &state);              // 创建状态
 
+    innerDNN_GPU_CHECK();
     innerDNN_model_rwkv_state_set0(&programs, &weights_gpu, &state);
 
+    innerDNN_GPU_CHECK();
     innerDNN_model_rwkv_forward(&weights_gpu, &state, &buffer, &programs, 1);  // 模型推理
 
     // 测试导出状态

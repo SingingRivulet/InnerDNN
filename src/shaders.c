@@ -373,7 +373,7 @@ void innerDNN_shaders_rmsnorm(innerDNN_shader_programs* prog, GLuint o, GLuint x
 
     GLuint currentBuffer = cache_1;
     GLuint nextBuffer = cache_2;
-    GLuint tmp;
+    // GLuint tmp;
 
     if (currentStepSize % 2 == 1) {
         nextStepSize += 1;
@@ -437,7 +437,7 @@ void innerDNN_shaders_rmsnorm(innerDNN_shader_programs* prog, GLuint o, GLuint x
 void innerDNN_shaders_softmax(innerDNN_shader_programs* prog, GLuint x, int size_x, int size_y, GLuint cache_1, GLuint cache_2, GLuint cache_3, GLuint cache_4) {
     // find max value (for numerical stability)
     GLuint currentBuffer = cache_1;
-    GLuint nextBuffer = cache_2;
+    // GLuint nextBuffer = cache_2;
     GLuint resBuffer_max;
     GLuint resBuffer_sum;
 
@@ -971,7 +971,7 @@ void innerDNN_shaders_rwkv_output(
     int size_output,
     int vec_offset,
     int mat_offset) {
-    int sizev4 = innerDNN_getBufferVec4(size);
+    // int sizev4 = innerDNN_getBufferVec4(size);
     int size_output_v4 = innerDNN_getBufferVec4(size_output);
     innerDNN_shaders_layerNorm(
         prog, x_norm, x,

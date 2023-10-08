@@ -199,7 +199,7 @@ void innerDNN_copyLocalMat(float* out, float* src, int n_layers, int dim_i, int 
 
 GLuint innerDNN_create_GPU_weight(float* buffer, int len_gpu) {
     GLuint remote_w;
-    innerDNN_create_GPU_buffer(remote_w, len_gpu, GL_STATIC_DRAW, buffer);
+    innerDNN_create_GPU_buffer(remote_w, len_gpu * sizeof(float), GL_STATIC_DRAW, buffer);
     return remote_w;
 }
 

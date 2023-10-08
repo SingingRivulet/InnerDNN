@@ -6,7 +6,7 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     void* buffer,
     ssize_t bufferSize) {
     innerDNN_model_rwkv_fileData* data = (innerDNN_model_rwkv_fileData*)buffer;
-    void* endPtr = ((char*)buffer) + bufferSize;  // 结束位置
+    // void* endPtr = ((char*)buffer) + bufferSize;  // 结束位置
     // 设置数据
     def->dim = data->header.dim;
     def->dim_hidden = data->header.dim_hidden;
@@ -220,15 +220,15 @@ void innerDNN_model_rwkv_weights_release(innerDNN_model_rwkv_weights_gpu* weight
 void innerDNN_model_rwkv_buffer_init(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_buffer* buffer) {
-    innerDNN_create_GPU_buffer(buffer->x, weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(buffer->logit, weights->def->dim_output_vec4, GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(buffer->x, weights->def->dim_vec4 * sizeof(float), GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(buffer->logit, weights->def->dim_output_vec4 * sizeof(float), GL_DYNAMIC_DRAW, NULL);
     for (int i = 0; i < 15; ++i) {
-        innerDNN_create_GPU_buffer(buffer->buffer[i], weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
+        innerDNN_create_GPU_buffer(buffer->buffer[i], weights->def->dim_vec4 * sizeof(float), GL_DYNAMIC_DRAW, NULL);
     }
     for (int i = 0; i < 2; ++i) {
         innerDNN_create_GPU_buffer(
             buffer->buffer_hidden[i],
-            weights->def->dim_hidden_vec4,
+            weights->def->dim_hidden_vec4 * sizeof(float),
             GL_DYNAMIC_DRAW, NULL);
     }
 }
@@ -248,7 +248,7 @@ void innerDNN_model_rwkv_buffer_release(
 void innerDNN_model_rwkv_state_set0(
     innerDNN_shader_programs* prog,
     innerDNN_model_rwkv_weights_gpu* weights,
-    innerDNN_model_rwkv_state* state){
+    innerDNN_model_rwkv_state* state) {
     innerDNN_shaders_fillBuffer(prog, state->aa, 0, 0, weights->def->dim_vec4 * weights->def->numLayer);
     innerDNN_shaders_fillBuffer(prog, state->bb, 0, 0, weights->def->dim_vec4 * weights->def->numLayer);
     innerDNN_shaders_fillBuffer(prog, state->pp, 0, 0, weights->def->dim_vec4 * weights->def->numLayer);
@@ -258,44 +258,50 @@ void innerDNN_model_rwkv_state_set0(
 void innerDNN_model_rwkv_state_init(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_state* state) {
-    innerDNN_create_GPU_buffer(state->aa, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(state->bb, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(state->pp, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(state->att_xx, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(state->ffn_xx, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->aa, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->bb, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->pp, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->att_xx, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->ffn_xx, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), GL_DYNAMIC_DRAW, NULL);
 }
 
 void innerDNN_model_rwkv_state_download(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_state* state,
-    float * aa, float * bb, float * pp, float * att_xx, float * ffn_xx) {
-    innerDNN_downloadGPUArray(aa, state->aa, 0, weights->def->dim_vec4*weights->def->numLayer);
-    innerDNN_downloadGPUArray(bb, state->bb, 0, weights->def->dim_vec4*weights->def->numLayer);
-    innerDNN_downloadGPUArray(pp, state->pp, 0, weights->def->dim_vec4*weights->def->numLayer);
-    innerDNN_downloadGPUArray(att_xx, state->att_xx, 0, weights->def->dim_vec4*weights->def->numLayer);
-    innerDNN_downloadGPUArray(ffn_xx, state->ffn_xx, 0, weights->def->dim_vec4*weights->def->numLayer);
+    float* aa,
+    float* bb,
+    float* pp,
+    float* att_xx,
+    float* ffn_xx) {
+    innerDNN_downloadGPUArray(aa, state->aa, 0, weights->def->dim_vec4 * weights->def->numLayer);
+    innerDNN_downloadGPUArray(bb, state->bb, 0, weights->def->dim_vec4 * weights->def->numLayer);
+    innerDNN_downloadGPUArray(pp, state->pp, 0, weights->def->dim_vec4 * weights->def->numLayer);
+    innerDNN_downloadGPUArray(att_xx, state->att_xx, 0, weights->def->dim_vec4 * weights->def->numLayer);
+    innerDNN_downloadGPUArray(ffn_xx, state->ffn_xx, 0, weights->def->dim_vec4 * weights->def->numLayer);
 }
 
 void innerDNN_model_rwkv_state_upload(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_state* state,
-    float * aa, float * bb, float * pp, float * att_xx, float * ffn_xx) {
-        
+    float* aa,
+    float* bb,
+    float* pp,
+    float* att_xx,
+    float* ffn_xx) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, state->aa);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4*weights->def->numLayer, aa);
-    
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), aa);
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, state->bb);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4*weights->def->numLayer, bb);
-    
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), bb);
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, state->pp);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4*weights->def->numLayer, pp);
-    
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), pp);
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, state->att_xx);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4*weights->def->numLayer, att_xx);
-    
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), att_xx);
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, state->ffn_xx);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4*weights->def->numLayer, ffn_xx);
-    
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, weights->def->dim_vec4 * weights->def->numLayer * sizeof(float), ffn_xx);
 }
 
 void innerDNN_model_rwkv_state_release(
