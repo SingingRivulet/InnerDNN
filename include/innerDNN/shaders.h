@@ -22,6 +22,7 @@ typedef struct {
     GLuint shader_transformer_softmax_output;
     GLuint shader_temperature;
     GLuint shader_copyBuffer;
+    GLuint shader_fillBuffer;
     GLuint shader_matmul;
     GLuint shader_matmul_trans_vec4;
     GLuint shader_sigmoid_vec4;
@@ -87,6 +88,7 @@ void innerDNN_shaders_matxvec_trans_vec4(
 void innerDNN_shaders_vecxvec(innerDNN_shader_programs* prog, GLuint out, GLuint a, GLuint b, int size);
 
 void innerDNN_shaders_copyBuffer(innerDNN_shader_programs* prog, GLuint src, GLuint dst, int src_offset, int dst_offset, int size);
+void innerDNN_shaders_fillBuffer(innerDNN_shader_programs* prog, GLuint dst, float val, int offset, int size);
 
 // 一些基本操作
 void innerDNN_shaders_accum(innerDNN_shader_programs* prog, GLuint a, GLuint b, int size);

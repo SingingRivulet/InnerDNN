@@ -245,14 +245,24 @@ void innerDNN_model_rwkv_buffer_release(
     }
 }
 
+void innerDNN_model_rwkv_state_set0(
+    innerDNN_shader_programs* prog,
+    innerDNN_model_rwkv_weights_gpu* weights,
+    innerDNN_model_rwkv_buffer* buffer){
+    innerDNN_shaders_fillBuffer(prog, state->aa, 0, 0, weights->def->dim_vec4 * weights->def->numLayer);
+    innerDNN_shaders_fillBuffer(prog, state->bb, 0, 0, weights->def->dim_vec4 * weights->def->numLayer);
+    innerDNN_shaders_fillBuffer(prog, state->pp, 0, 0, weights->def->dim_vec4 * weights->def->numLayer);
+    innerDNN_shaders_fillBuffer(prog, state->att_xx, 0, 0, weights->def->dim_vec4 * weights->def->numLayer);
+    innerDNN_shaders_fillBuffer(prog, state->ffn_xx, 0, 0, weights->def->dim_vec4 * weights->def->numLayer);
+}
 void innerDNN_model_rwkv_state_init(
     innerDNN_model_rwkv_weights_gpu* weights,
     innerDNN_model_rwkv_state* state) {
-    innerDNN_create_GPU_buffer(state->aa, weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(state->bb, weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(state->pp, weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(state->att_xx, weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
-    innerDNN_create_GPU_buffer(state->ffn_xx, weights->def->dim_vec4, GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->aa, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->bb, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->pp, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->att_xx, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
+    innerDNN_create_GPU_buffer(state->ffn_xx, weights->def->dim_vec4*weights->def->numLayer, GL_DYNAMIC_DRAW, NULL);
 }
 
 void innerDNN_model_rwkv_state_release(

@@ -38,6 +38,8 @@ void innerDNN_shaders_createProgram(innerDNN_shader_programs* program) {
     innerDNN_GPU_CHECK();
     program->shader_copyBuffer = innerDNN_shaders_createComputeProgram(shader_copyBuffer);
     innerDNN_GPU_CHECK();
+    program->shader_fillBuffer = innerDNN_shaders_createComputeProgram(shader_fillBuffer);
+    innerDNN_GPU_CHECK();
     program->shader_matmul_trans_vec4 = innerDNN_shaders_createComputeProgram(shader_matmul_trans_vec4);
     innerDNN_GPU_CHECK();
     program->shader_matmul = innerDNN_shaders_createComputeProgram(shader_matmul);
@@ -83,6 +85,7 @@ void innerDNN_shaders_deleteProgram(innerDNN_shader_programs* prog) {
     glDeleteProgram(prog->shader_transformer_softmax_output);
     glDeleteProgram(prog->shader_temperature);
     glDeleteProgram(prog->shader_copyBuffer);
+    glDeleteProgram(prog->shader_fillBuffer);
     glDeleteProgram(prog->shader_matmul);
     glDeleteProgram(prog->shader_matmul_trans_vec4);
     glDeleteProgram(prog->shader_sigmoid_vec4);
@@ -529,6 +532,21 @@ void innerDNN_shaders_copyBuffer(innerDNN_shader_programs* prog, GLuint src, GLu
 
     uniformVar = glGetUniformLocation(prog->shader_copyBuffer, "dst_offset");
     glUniform1i(uniformVar, dst_offset);
+
+    glDispatchCompute(size, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    innerDNN_GPU_CHECK();
+}
+
+void innerDNN_shaders_fillBuffer(innerDNN_shader_programs* prog, GLuint dst, float val, int offset, int size) {
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dst);
+    glUseProgram(prog->shader_fillBuffer);
+
+    int uniformVar = glGetUniformLocation(prog->shader_fillBuffer, "offset");
+    glUniform1i(uniformVar, offset);
+
+    uniformVar = glGetUniformLocation(prog->shader_fillBuffer, "idata");
+    glUniform1f(uniformVar, val);
 
     glDispatchCompute(size, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

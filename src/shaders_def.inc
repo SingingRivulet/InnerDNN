@@ -626,6 +626,22 @@ static const char* shader_copyBuffer =
     "    dst.data[index+dst_offset] = src.data[index+src_offset];\n"
     "}\n";
 
+static const char* shader_fillBuffer =
+    "#version 320 es\n"
+    "uniform int offset;\n"
+    "uniform float idata;\n"
+
+    "layout(local_size_x = 1) in;\n"
+
+    "layout(binding = 0) writeonly buffer Output0{\n"
+    "    float data[];\n"
+    "} dst;\n"
+
+    "void main(){\n"
+    "    int index = int(gl_GlobalInvocationID.x);\n"
+    "    dst.data[index+offset] = idata;\n"
+    "}\n";
+
 static const char* shader_rwkv_carry_vec4 = 
     "#version 320 es\n"
     "uniform int offset;\n"
