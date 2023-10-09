@@ -27,80 +27,171 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     const int output_linear_mat_size = def->dim * def->dim_output;
     const int embeddingTable_size = def->embedding_size * def->dim;
 
+#ifdef DEBUG_DUMP
+    printf("model size:\n");
+    printf("dim:%d\n", def->dim);
+    printf("dim_hidden:%d\n", def->dim_hidden);
+    printf("dim_output:%d\n", def->dim_output);
+    printf("numLayer:%d\n", def->numLayer);
+    printf("embedding_size:%d\n", def->embedding_size);
+    printf("dim_hidden_vec4:%d\n", def->dim_hidden_vec4);
+    printf("dim_vec4:%d\n", def->dim_vec4);
+    printf("dim_output_vec4:%d\n", def->dim_output_vec4);
+    printf("ffn_key_len:%d\n", def->ffn_key_len);
+    printf("ffn_value_len:%d\n", def->ffn_value_len);
+    printf("weightMat_len:%d\n", def->weightMat_len);
+    printf("\nload model:\n");
+#define shiftPtr(dis) \
+    ptr += dis;       \
+    printf("shiftPtr:%d\n", dis);
+#else
 #define shiftPtr(dis) \
     ptr += dis;
+#endif
 
     float* ptr = data->data;
 
+#ifdef DEBUG_DUMP
+    printf("token_embedding_table\n");
+#endif
     def->token_embedding_table = ptr;
     shiftPtr(embeddingTable_size);
 
+#ifdef DEBUG_DUMP
+    printf("att_norm_weight\n");
+#endif
     weights->att_norm_weight = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_norm_bias\n");
+#endif
     weights->att_norm_bias = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_time_first\n");
+#endif
     weights->att_time_first = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_time_decay\n");
+#endif
     weights->att_time_decay = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_time_mix_k\n");
+#endif
     weights->att_time_mix_k = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_time_mix_v\n");
+#endif
     weights->att_time_mix_v = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_time_mix_r\n");
+#endif
     weights->att_time_mix_r = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_output\n");
+#endif
     weights->att_output = ptr;
     shiftPtr(linear_mat_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_receptance\n");
+#endif
     weights->att_receptance = ptr;
     shiftPtr(linear_mat_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_key\n");
+#endif
     weights->att_key = ptr;
     shiftPtr(linear_mat_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("att_value\n");
+#endif
     weights->att_value = ptr;
     shiftPtr(linear_mat_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("ffn_time_mix_k\n");
+#endif
     weights->ffn_time_mix_k = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("ffn_time_mix_r\n");
+#endif
     weights->ffn_time_mix_r = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("ffn_norm_weight\n");
+#endif
     weights->ffn_norm_weight = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("ffn_norm_bias\n");
+#endif
     weights->ffn_norm_bias = ptr;
     shiftPtr(tensor_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("ffn_receptance\n");
+#endif
     weights->ffn_receptance = ptr;
     shiftPtr(linear_mat_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("ffn_key\n");
+#endif
     weights->ffn_key = ptr;
     shiftPtr(hidden_linear_mat_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("ffn_value\n");
+#endif
     weights->ffn_value = ptr;
     shiftPtr(hidden_linear_mat_size * def->numLayer);
 
+#ifdef DEBUG_DUMP
+    printf("input_weight\n");
+#endif
     weights->input_weight = ptr;
     shiftPtr(tensor_size);
 
+#ifdef DEBUG_DUMP
+    printf("input_bias\n");
+#endif
     weights->input_bias = ptr;
     shiftPtr(tensor_size);
 
+#ifdef DEBUG_DUMP
+    printf("output_weight\n");
+#endif
     weights->output_weight = ptr;
     shiftPtr(tensor_size);
 
+#ifdef DEBUG_DUMP
+    printf("output_bias\n");
+#endif
     weights->output_bias = ptr;
     shiftPtr(tensor_size);
 
+#ifdef DEBUG_DUMP
+    printf("output_head\n");
+#endif
     weights->output_head = ptr;
     shiftPtr(output_linear_mat_size);
 }
