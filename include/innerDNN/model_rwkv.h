@@ -1,6 +1,7 @@
 #ifndef INNER_DNN_MODEL_RWKV
 #define INNER_DNN_MODEL_RWKV
 #include "shaders.h"
+#include <stdint.h>
 
 typedef struct {
     GLuint aa;
@@ -97,11 +98,11 @@ typedef struct {
 
 #pragma pack(push, 1)
 typedef struct {
-    int dim;
-    int dim_hidden;
-    int dim_output;
-    int numLayer;
-    int embedding_size;
+    int32_t dim;
+    int32_t dim_hidden;
+    int32_t dim_output;
+    int32_t numLayer;
+    int32_t embedding_size;
 } innerDNN_model_rwkv_fileData_header;
 typedef struct {
     innerDNN_model_rwkv_fileData_header header;
