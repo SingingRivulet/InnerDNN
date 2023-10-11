@@ -1,4 +1,5 @@
 #include "innerDNN/model_rwkv.h"
+#include "innerDNN/loader.h"
 void run_loadModel_fromBuffer(void* inbuffer, ssize_t size) {
     innerDNN_shader_programs programs;  // shader
 
@@ -28,34 +29,10 @@ void run_loadModel_fromBuffer(void* inbuffer, ssize_t size) {
 
 // 加载模型：把文件映射到内存
 void run_loadModel() {
-    ssize_t file_size;
-    const char* checkpoint = "test.innw";
-    FILE* file = fopen(checkpoint, "rb");
-    if (!file) {
-        fprintf(stderr, "Couldn't open file %s\n", checkpoint);
-        return;
-    }
-    fseek(file, 0, SEEK_END);  // move file pointer to end of file
-    file_size = ftell(file);   // get the file size, in bytes
-    fclose(file);
-    printf("file size:%ld\n", file_size);
-    // memory map the Transformer weights into the data pointer
-    int fd = open(checkpoint, O_RDONLY);  // open in read only mode
-    if (fd == -1) {
-        fprintf(stderr, "open failed!\n");
-        return;
-    }
-    void* data = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (data == MAP_FAILED) {
-        fprintf(stderr, "mmap failed!\n");
-        return;
-    }
-    run_loadModel_fromBuffer(data, file_size);
-
-    if (data != MAP_FAILED)
-        munmap(data, file_size);
-    if (fd != -1)
-        close(fd);
+    innerDNN_file2memory checkpoint;
+    innerDNN_loadFile(&checkpoint, "test.innw");
+    run_loadModel_fromBuffer(checkpoint.data, checkpoint.size);
+    innerDNN_unloadFile(&checkpoint);
 }
 
 int main() {

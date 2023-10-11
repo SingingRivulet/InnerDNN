@@ -6,7 +6,7 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     void* buffer,
     ssize_t bufferSize) {
     innerDNN_model_rwkv_fileData* data = (innerDNN_model_rwkv_fileData*)buffer;
-    // void* endPtr = ((char*)buffer) + bufferSize;  // 结束位置
+    void* endPtr = ((char*)buffer) + bufferSize;  // 结束位置
     // 设置数据
     def->dim = data->header.dim;
     def->dim_hidden = data->header.dim_hidden;
@@ -43,10 +43,16 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     printf("\nload model:\n");
 #define shiftPtr(dis) \
     ptr += dis;       \
-    printf("shiftPtr:%d\n", dis);
+    printf("shiftPtr:%d\n", dis);\
+    if (ptr>=endPtr){\
+        printf("shiftPtr:out of range\n");\
+    }
 #else
 #define shiftPtr(dis) \
-    ptr += dis;
+    ptr += dis;\
+    if (ptr>=endPtr){\
+        printf("shiftPtr:out of range\n");\
+    }
 #endif
 
     float* ptr = data->data;
