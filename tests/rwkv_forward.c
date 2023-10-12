@@ -1,3 +1,4 @@
+#include "innerDNN/loader.h"
 #include "innerDNN/model_rwkv.h"
 
 // 初始化一个随机的模型，并保存

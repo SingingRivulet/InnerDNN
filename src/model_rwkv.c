@@ -6,7 +6,7 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     void* buffer,
     ssize_t bufferSize) {
     innerDNN_model_rwkv_fileData* data = (innerDNN_model_rwkv_fileData*)buffer;
-    void* endPtr = ((char*)buffer) + bufferSize;  // 结束位置
+    const char* endPtr = ((const char*)buffer) + bufferSize;  // 结束位置
     // 设置数据
     def->dim = data->header.dim;
     def->dim_hidden = data->header.dim_hidden;
@@ -27,6 +27,13 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     const int output_linear_mat_size = def->dim * def->dim_output;
     const int embeddingTable_size = def->embedding_size * def->dim;
 
+#define CHECK_MEMORY(ptr)                                                               \
+    if (((const char*)ptr) > endPtr) {                                                  \
+        printf("shiftPtr:out of range\n");                                              \
+        printf("bufferSize=%ld\n", bufferSize);                                         \
+        printf("%p-%p=%ld\n", ptr, endPtr, ((const char*)ptr) - ((const char*)endPtr)); \
+    }
+
 #ifdef DEBUG_DUMP
     printf("model size:\n");
     printf("dim:%d\n", def->dim);
@@ -41,18 +48,14 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
     printf("ffn_value_len:%d\n", def->ffn_value_len);
     printf("weightMat_len:%d\n", def->weightMat_len);
     printf("\nload model:\n");
-#define shiftPtr(dis) \
-    ptr += dis;       \
-    printf("shiftPtr:%d\n", dis);\
-    if (ptr>=endPtr){\
-        printf("shiftPtr:out of range\n");\
-    }
+#define shiftPtr(dis)             \
+    ptr += dis;                   \
+    printf("shiftPtr:%d\n", dis); \
+    CHECK_MEMORY(ptr);
 #else
 #define shiftPtr(dis) \
-    ptr += dis;\
-    if (ptr>=endPtr){\
-        printf("shiftPtr:out of range\n");\
-    }
+    ptr += dis;       \
+    CHECK_MEMORY(ptr);
 #endif
 
     float* ptr = data->data;

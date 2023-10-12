@@ -1,5 +1,5 @@
 #include "innerDNN/loader.h"
-void innerDNN_loadFile(innerDNN_file2memory * f, const char * checkpoint) {
+void innerDNN_loadFile(innerDNN_file2memory* f, const char* checkpoint) {
     ssize_t file_size;
     FILE* file = fopen(checkpoint, "rb");
     if (!file) {
@@ -27,8 +27,8 @@ void innerDNN_loadFile(innerDNN_file2memory * f, const char * checkpoint) {
     f->data = data;
 }
 
-void innerDNN_unloadFile(innerDNN_file2memory * f) {
-    if (data != MAP_FAILED)
+void innerDNN_unloadFile(innerDNN_file2memory* f) {
+    if (f->data != MAP_FAILED)
         munmap(f->data, f->size);
     if (f->fd != -1)
         close(f->fd);
