@@ -203,6 +203,10 @@ void innerDNN_model_rwkv_loadWeightsFromBuffer(
 #endif
     weights->output_head = ptr;
     shiftPtr(output_linear_mat_size);
+#ifdef DEBUG_DUMP
+    printf("current loader status:\n");
+    printf("%p-%p=%ld\n", ptr, endPtr, ((const char*)ptr) - ((const char*)endPtr));
+#endif
 }
 
 void innerDNN_model_rwkv_saveWeightsToFile(
