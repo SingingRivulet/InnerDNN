@@ -90,7 +90,6 @@ static const char* shader_variance_before_sum =
 static const char* shader_layerNorm_inplace =
     "#version 320 es\n"
     "uniform int insize;\n"
-    "uniform int shape0;\n"
     "uniform int weight_offset;\n"
     "layout(local_size_x = 1) in;\n"
 
@@ -124,7 +123,6 @@ static const char* shader_layerNorm_inplace =
 static const char* shader_layerNorm =
     "#version 320 es\n"
     "uniform int insize;\n"
-    "uniform int shape0;\n"
     "uniform int weight_offset;\n"
     "layout(local_size_x = 1) in;\n"
 

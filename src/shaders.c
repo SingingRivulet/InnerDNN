@@ -333,9 +333,21 @@ void innerDNN_shaders_layerNorm(innerDNN_shader_programs* prog, GLuint o, GLuint
         prog->shader_sum, prog->shader_sum_vec4,
         nextBuffer, currentBuffer, nextStepSize, 1, &currentBuffer, NULL);
 
+    // printf("resBuffer_varisum:");
+    // innerDNN_dumpGPUArray(resBuffer_varisum, 0, 1);
+    // printf("\nresBuffer_sum:");
+    // innerDNN_dumpGPUArray(resBuffer_sum, 0, 1);
+    // printf("\n");
     // layerNorm
     int weight_offset_p;
+
+    // printf("weight:");
+    // innerDNN_dumpGPUArray(weight, 0, 100);
+    // printf("bias:");
+    // innerDNN_dumpGPUArray(bias, 0, 100);
+
     if (o == x) {
+        // printf("inplace\n");
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, x);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, resBuffer_sum);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, resBuffer_varisum);
@@ -345,6 +357,9 @@ void innerDNN_shaders_layerNorm(innerDNN_shader_programs* prog, GLuint o, GLuint
 
         weight_offset_p = glGetUniformLocation(prog->shader_layerNorm_inplace, "weight_offset");
         glUniform1i(weight_offset_p, weight_offset);
+
+        insize = glGetUniformLocation(prog->shader_layerNorm_inplace, "insize");
+        glUniform1i(insize, size);
 
         glDispatchCompute(size, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -360,6 +375,9 @@ void innerDNN_shaders_layerNorm(innerDNN_shader_programs* prog, GLuint o, GLuint
 
         weight_offset_p = glGetUniformLocation(prog->shader_layerNorm, "weight_offset");
         glUniform1i(weight_offset_p, weight_offset);
+
+        insize = glGetUniformLocation(prog->shader_layerNorm, "insize");
+        glUniform1i(insize, size);
 
         glDispatchCompute(size, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -953,6 +971,8 @@ void innerDNN_shaders_rwkv_input(
     float* content_row = &(token_embedding_table[token * size]);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, x);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, size * sizeof(float), content_row);
+    // printf("x:\n");
+    // innerDNN_dumpGPUArray(x, 0, 100);
     innerDNN_shaders_layerNorm(prog, x, x, weight, bias, size, 0, cache_1, cache_2, cache_3);
 }
 

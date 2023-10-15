@@ -1,7 +1,8 @@
 #ifndef INNER_DNN_MODEL_RWKV
 #define INNER_DNN_MODEL_RWKV
-#include "shaders.h"
 #include <stdint.h>
+#include "arg.h"
+#include "shaders.h"
 
 typedef struct {
     GLuint aa;
@@ -94,6 +95,7 @@ typedef struct {
     GLuint buffer_hidden[2];
     GLuint x;
     GLuint logit;
+    innerDNN_probIndex* probindex;
 } innerDNN_model_rwkv_buffer;
 
 #pragma pack(push, 1)

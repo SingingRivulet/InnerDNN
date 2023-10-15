@@ -145,6 +145,16 @@ void test_loadModel_fromBuffer(void* inbuffer, ssize_t size) {
 
     innerDNN_model_rwkv_forward(&weights_gpu, &state, &buffer, &programs, 1);  // 模型推理
     printf("model inference success\n");
+    innerDNN_dumpGPUArray(buffer.logit, 0, 100);
+    innerDNN_dumpGPUArray(buffer.x, 0, 100);
+
+    int token = 100;
+    for (int i = 0; i < 100; ++i) {
+        innerDNN_model_rwkv_forward(&weights_gpu, &state, &buffer, &programs, token);  // 模型推理
+        token = innerDNN_sample_topp(&programs, buffer.logit, model_def.dim_output, 0.9, buffer.probindex);
+        printf("token:%d logit:", token);
+        innerDNN_dumpGPUArray(buffer.x, 0, 4);
+    }
 
     // 释放gpu端
     innerDNN_model_rwkv_state_release(&weights_gpu, &state);

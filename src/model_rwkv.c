@@ -335,6 +335,7 @@ void innerDNN_model_rwkv_buffer_init(
             weights->def->dim_hidden_vec4 * sizeof(float),
             GL_DYNAMIC_DRAW, NULL);
     }
+    buffer->probindex = (innerDNN_probIndex*)malloc(weights->def->dim_output * sizeof(innerDNN_probIndex));
 }
 void innerDNN_model_rwkv_buffer_release(
     innerDNN_model_rwkv_weights_gpu* weights,
@@ -347,6 +348,7 @@ void innerDNN_model_rwkv_buffer_release(
     for (int i = 0; i < 2; ++i) {
         glDeleteBuffers(1, &buffer->buffer_hidden[i]);
     }
+    free(buffer->probindex);
 }
 
 void innerDNN_model_rwkv_state_set0(
@@ -436,6 +438,8 @@ void innerDNN_model_rwkv_forward(
     innerDNN_GPU_CHECK();
 
     for (i = 0; i < weights->def->numLayer; ++i) {
+        // printf("xi:\n");
+        // innerDNN_dumpGPUArray(buffer->x, 0, 100);
         innerDNN_shaders_rwkv_layer(
             prog,
             buffer->x,
@@ -470,6 +474,8 @@ void innerDNN_model_rwkv_forward(
             weights->def->weightMat_len * i,
             weights->def->ffn_key_len * i,
             weights->def->ffn_value_len * i);
+        // printf("xo:\n");
+        // innerDNN_dumpGPUArray(buffer->x, 0, 100);
         innerDNN_GPU_CHECK();
     }
 
