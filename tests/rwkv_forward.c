@@ -132,14 +132,19 @@ void test_loadModel_fromBuffer(void* inbuffer, ssize_t size) {
     innerDNN_model_rwkv_weights_def model_def;        // 模型定义
 
     innerDNN_shaders_createProgram(&programs);  // 编译着色器
+    printf("compile shader success\n");
 
     innerDNN_model_rwkv_loadWeightsFromBuffer(&weights_local, &model_def, inbuffer, size);
+    printf("load weights success\n");
 
     innerDNN_model_rwkv_weights_upload(&weights_gpu, &weights_local);  // 上传权重
-    innerDNN_model_rwkv_buffer_init(&weights_gpu, &buffer);            // 构建buffer
-    innerDNN_model_rwkv_state_init(&weights_gpu, &state);              // 创建状态
+    printf("upload weights success\n");
+    innerDNN_model_rwkv_buffer_init(&weights_gpu, &buffer);  // 构建buffer
+    innerDNN_model_rwkv_state_init(&weights_gpu, &state);    // 创建状态
+    printf("create buffer success\n");
 
     innerDNN_model_rwkv_forward(&weights_gpu, &state, &buffer, &programs, 1);  // 模型推理
+    printf("model inference success\n");
 
     // 释放gpu端
     innerDNN_model_rwkv_state_release(&weights_gpu, &state);
@@ -150,18 +155,24 @@ void test_loadModel_fromBuffer(void* inbuffer, ssize_t size) {
 }
 
 // 加载模型：把文件映射到内存
-void test_loadModel() {
+void test_loadModel(const char* modelPath) {
     innerDNN_file2memory checkpoint;
-    innerDNN_loadFile(&checkpoint, "test.innw");
+    innerDNN_loadFile(&checkpoint, modelPath);
+    printf("load file success\n");
     test_loadModel_fromBuffer(checkpoint.data, checkpoint.size);
     innerDNN_unloadFile(&checkpoint);
 }
 
-int main() {
+int main(int argc, const char* argv[]) {
     innerDNN_GPUContext context;           // gpu上下文
     innerDNN_create_GPUContext(&context);  // 初始化gpu上下文
-    test_randmodel();                      // 测试随机模型
-    test_loadModel();                      // 测试加载模型
+    if (argc >= 2) {
+        printf("load model:%s\n", argv[1]);
+        test_loadModel(argv[1]);  // 测试加载模型
+    } else {
+        test_randmodel();             // 测试随机模型
+        test_loadModel("test.innw");  // 测试加载模型
+    }
     innerDNN_release_GPUContext(&context);
     return 0;
 }
