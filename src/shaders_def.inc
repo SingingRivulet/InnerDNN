@@ -828,7 +828,7 @@ static const char* shader_sigmoid_vec4 =
 
     "void main(){\n"
     "    int index = int(gl_GlobalInvocationID.x);\n"
-    "    xout.data[index] = vec4(1.) / (vec4(1.) - exp(-x.data[index]));\n"
+    "    xout.data[index] = vec4(1.) / (vec4(1.) + exp(-x.data[index]));\n"
     "}";
 
 static const char* shader_vecxvec_vec4 =

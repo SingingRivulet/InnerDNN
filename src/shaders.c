@@ -300,6 +300,8 @@ void innerDNN_shaders_accum(innerDNN_shader_programs* prog, GLuint a, GLuint b, 
 void innerDNN_shaders_layerNorm(innerDNN_shader_programs* prog, GLuint o, GLuint x, GLuint weight, GLuint bias, int size, int weight_offset, GLuint cache_1, GLuint cache_2, GLuint cache_3) {
     // LayerNorm is `x = (x - mean(x)) / sqrt(variance(x) + 1e-5) * weight + bias`
     // sum
+    // printf("layerNorm x:\n");
+    // innerDNN_dumpGPUArray(x, 0, 100);
     GLuint currentBuffer;
     GLuint nextBuffer = cache_3;
     GLuint resBuffer_sum = innerDNN_shaders_reduce_iteration_input(
@@ -335,9 +337,8 @@ void innerDNN_shaders_layerNorm(innerDNN_shader_programs* prog, GLuint o, GLuint
 
     // printf("resBuffer_varisum:");
     // innerDNN_dumpGPUArray(resBuffer_varisum, 0, 1);
-    // printf("\nresBuffer_sum:");
+    // printf("resBuffer_sum:");
     // innerDNN_dumpGPUArray(resBuffer_sum, 0, 1);
-    // printf("\n");
     // layerNorm
     int weight_offset_p;
 
@@ -383,6 +384,9 @@ void innerDNN_shaders_layerNorm(innerDNN_shader_programs* prog, GLuint o, GLuint
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         innerDNN_GPU_CHECK();
     }
+    // printf("out:\n");
+    // innerDNN_dumpGPUArray(o, 0, 100);
+    // printf("\n");
 }
 
 void innerDNN_shaders_rmsnorm(innerDNN_shader_programs* prog, GLuint o, GLuint x, GLuint weight, int size, int weight_offset, GLuint cache_1, GLuint cache_2) {
@@ -731,9 +735,9 @@ void innerDNN_shaders_rwkv_carry(
 
     innerDNN_shaders_layerNorm(prog, x_out, x, weight, bias, size, w_offset, cache_1, cache_2, cache_3);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, x_out);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, x_prev);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xx);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, xx);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, x_out);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, x_prev);
     glUseProgram(prog->shader_rwkv_carry_vec4);
 
     int uniformVar = glGetUniformLocation(prog->shader_rwkv_carry_vec4, "offset");
@@ -781,9 +785,14 @@ void innerDNN_shaders_rwkv_att(
     int rkv_w_offset,
     int mix_offset) {
     int sizev4 = innerDNN_getBufferVec4(size);
+    // printf("rwkv xx:\n");
+    // innerDNN_dumpGPUArray(xx, 0, 100);
     innerDNN_shaders_rwkv_carry(
         prog, norm_weight, norm_bias, x, x_in, x_prev, xx, cache_1, cache_2, cache_3,
         size, mix_offset, mix_offset);
+    // printf("rwkv xx(saved):\n");
+    // innerDNN_dumpGPUArray(xx, 0, 100);
+    
     innerDNN_shaders_rwkv_att_rkv(
         prog, r, k, v,
         att_time_mix_k, att_time_mix_v, att_time_mix_r,
@@ -793,11 +802,19 @@ void innerDNN_shaders_rwkv_att(
     innerDNN_shaders_rwkv_att_wkv(
         prog, att_time_first, att_time_decay,
         k, v, aa, bb, pp, wkv, size, mix_offset);
+
     innerDNN_shaders_vecxvec(prog, rwkv, r, wkv, sizev4);
+
+    // printf("rwkv:\n");
+    // innerDNN_dumpGPUArray(rwkv, 0, 100);
+
     innerDNN_shaders_matxvec_trans_vec4(
         prog, output, rwkv, att_output,
         sizev4,
         size, 0, rkv_w_offset);
+
+    // printf("att output:\n");
+    // innerDNN_dumpGPUArray(output, 0, 100);
 }
 
 void innerDNN_shaders_rwkv_att_wkv(
@@ -829,6 +846,9 @@ void innerDNN_shaders_rwkv_att_wkv(
     glDispatchCompute(sizev4 / 4, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     innerDNN_GPU_CHECK();
+
+    // printf("wkv out:\n");
+    // innerDNN_dumpGPUArray(wkv, 0, 100);
 }
 
 void innerDNN_shaders_rwkv_att_rkv(
@@ -869,11 +889,44 @@ void innerDNN_shaders_rwkv_att_rkv(
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     innerDNN_GPU_CHECK();
 
+    // printf("rkv x_prev:\n");
+    // innerDNN_dumpGPUArray(x_prev, 0, 100);
+
+    // printf("rkv att_time_mix_k:\n");
+    // innerDNN_dumpGPUArray(att_time_mix_k, 0, 100);
+
+    // printf("rkv att_time_mix_v:\n");
+    // innerDNN_dumpGPUArray(att_time_mix_v, 0, 100);
+
+    // printf("rkv att_time_mix_r:\n");
+    // innerDNN_dumpGPUArray(att_time_mix_r, 0, 100);
+
+    // printf("rkv xr:\n");
+    // innerDNN_dumpGPUArray(xr, 0, 100);
+
+    // printf("rkv xk:\n");
+    // innerDNN_dumpGPUArray(xk, 0, 100);
+
+    // printf("rkv xv:\n");
+    // innerDNN_dumpGPUArray(xv, 0, 100);
+
     innerDNN_shaders_matxvec_trans_vec4(
         prog, cache_r, xr, att_receptance,
         sizev4,
         size, 0, w_offset);
-    innerDNN_shaders_sigmoid(prog, r, cache_r, size);
+
+    // printf("rkv att_receptance:\n");
+    // innerDNN_dumpGPUArray(att_receptance, 0, 100);
+    // printf("rkv att_key:\n");
+    // innerDNN_dumpGPUArray(att_key, 0, 100);
+
+    // printf("rkv cache_r:\n");
+    // innerDNN_dumpGPUArray(cache_r, 0, 100);
+
+    // printf("rkv r:\n");
+    // innerDNN_dumpGPUArray(r, 0, 100);
+
+    innerDNN_shaders_sigmoid(prog, cache_r, r, sizev4);
 
     innerDNN_shaders_matxvec_trans_vec4(
         prog, k, xk, att_key,
@@ -884,6 +937,13 @@ void innerDNN_shaders_rwkv_att_rkv(
         prog, v, xv, att_value,
         sizev4,
         size, 0, w_offset);
+
+    // printf("rkv r:\n");
+    // innerDNN_dumpGPUArray(r, 0, 100);
+    // printf("rkv k:\n");
+    // innerDNN_dumpGPUArray(k, 0, 100);
+    // printf("rkv v:\n");
+    // innerDNN_dumpGPUArray(v, 0, 100);
 }
 
 void innerDNN_shaders_rwkv_ffn(
@@ -918,9 +978,13 @@ void innerDNN_shaders_rwkv_ffn(
     int mix_offset) {
     int sizev4 = innerDNN_getBufferVec4(size);
     int hidden_size_v4 = innerDNN_getBufferVec4(hidden_size);
+
     innerDNN_shaders_rwkv_carry(
         prog, norm_weight, norm_bias, x, x_in, x_prev, xx, cache_1, cache_2, cache_3,
         size, mix_offset, mix_offset);
+
+    // printf("ffn x(input):\n");
+    // innerDNN_dumpGPUArray(x, 0, 100);
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ffn_time_mix_k);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ffn_time_mix_r);
@@ -946,15 +1010,30 @@ void innerDNN_shaders_rwkv_ffn(
     // 隐含层
     innerDNN_shaders_matxvec_trans_vec4(
         prog, k, xk, ffn_key,
-        sizev4,
-        hidden_size, 0, ffn_key_offset);
+        hidden_size_v4,
+        size, 0, ffn_key_offset);
+
+    // printf("ffn xk:\n");
+    // innerDNN_dumpGPUArray(xk, 0, 100);
+    // printf("ffn mk:\n");
+    // innerDNN_dumpGPUArray(k, 0, 100);
+
     innerDNN_shaders_rwkv_relu_and_sqr(prog, k, sk, hidden_size_v4);
     innerDNN_shaders_matxvec_trans_vec4(
         prog, wvk, sk, ffn_value,
-        hidden_size_v4,
-        size, 0, ffn_value_offset);
+        sizev4,
+        hidden_size, 0, ffn_value_offset);
 
     innerDNN_shaders_vecxvec(prog, ffn, wvk, sr, sizev4);
+
+    // printf("ffn r:\n");
+    // innerDNN_dumpGPUArray(sr, 0, 100);
+    
+    // printf("ffn sk:\n");
+    // innerDNN_dumpGPUArray(sk, 0, 100);
+
+    // printf("ffn:\n");
+    // innerDNN_dumpGPUArray(ffn, 0, 100);
 }
 
 void innerDNN_shaders_rwkv_input(
@@ -971,7 +1050,7 @@ void innerDNN_shaders_rwkv_input(
     float* content_row = &(token_embedding_table[token * size]);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, x);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, size * sizeof(float), content_row);
-    // printf("x:\n");
+    // printf("x(token=%d size=%d):\n",token,size);
     // innerDNN_dumpGPUArray(x, 0, 100);
     innerDNN_shaders_layerNorm(prog, x, x, weight, bias, size, 0, cache_1, cache_2, cache_3);
 }
@@ -1053,6 +1132,8 @@ void innerDNN_shaders_rwkv_layer(
         size, mat_offset, vec_offset);
     innerDNN_GPU_CHECK();
     innerDNN_shaders_accum(prog, x, caches[0], sizev4);
+    // printf("x (mix):\n");
+    // innerDNN_dumpGPUArray(x, 0, 100);
     innerDNN_GPU_CHECK();
     innerDNN_shaders_rwkv_ffn(
         prog, caches[0],

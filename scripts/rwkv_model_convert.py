@@ -51,7 +51,7 @@ with open(sys.argv[2], 'wb') as out_file:
     for i in range(numLayer):
         model[f"blocks.{i}.att.time_first"].float().numpy().tofile(out_file)
     for i in range(numLayer):
-        model[f"blocks.{i}.att.time_decay"].float().numpy().tofile(out_file)
+        (-torch.exp(model[f"blocks.{i}.att.time_decay"])).float().numpy().tofile(out_file)
 
     for i in range(numLayer):
         model[f"blocks.{i}.att.time_mix_k"].float().numpy().tofile(out_file)
