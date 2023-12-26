@@ -133,6 +133,9 @@ int innerDNN_bpe_encode(const char* text, innerDNN_bpe_vocab* vocab, unsigned in
     // first encode every individual byte in the input string
     *n_tokens = 0;  // the number of tokens
     for (const char* c = text; *c != '\0'; c++) {
+        if ((*n_tokens) >= max_token_length) {
+            break;
+        }
         sprintf(str_buffer, "%c", *c);
         innerDNN_bpe_vocab_item* wd = innerDNN_bpe_str_lookup(str_buffer, vocab);
         if (wd == NULL) {

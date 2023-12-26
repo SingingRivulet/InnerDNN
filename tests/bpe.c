@@ -9,14 +9,16 @@ void test_load() {
     //  for (int i = 0; i < vocab->count; ++i) {
     //      printf("%s %f %d\n", vocab->words[i].str, vocab->words[i].score, vocab->words[i].id);
     //  }
-    const char* testStr = "hello world!";
+    const char* testStr = "hello world!innerDNN";
     int ntokens;
-    innerDNN_bpe_vocab_item* tokens[16];
-    innerDNN_bpe_encode(testStr, vocab, 16, tokens, &ntokens);
+    innerDNN_bpe_vocab_item* tokens[32];
+    innerDNN_bpe_encode(testStr, vocab, 32, tokens, &ntokens);
     for (int i = 0; i < ntokens; ++i) {
         printf("%s %f %d\n", tokens[i]->str, tokens[i]->score, tokens[i]->id);
     }
+    printf("releasing vocab...\n");
     innerDNN_bpe_releaseVocab(vocab);
+    printf("success\n");
 }
 int main() {
     test_load();
