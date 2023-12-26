@@ -6,29 +6,33 @@
 
 // 对已排序的数据进行处理（二分法）
 innerDNN_bpe_vocab_item* innerDNN_bpe_str_lookup(char* str, innerDNN_bpe_vocab* vocab) {
-    // Assume the array is sorted
-    int vocab_size = vocab->count;
-    int left = 0;
-    int right = vocab_size - 1;
+    if (vocab->indexer) {
+        return (innerDNN_bpe_vocab_item*)innerDNN_trie_search(vocab->indexer, str);
+    } else {
+        // Assume the array is sorted
+        int vocab_size = vocab->count;
+        int left = 0;
+        int right = vocab_size - 1;
 
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-        int result = strcmp(str, vocab->words[mid].str);
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            int result = strcmp(str, vocab->words[mid].str);
 
-        if (result == 0) {
-            // Perfect match found
-            return &vocab->words[mid];
-        } else if (result < 0) {
-            // str is less than vocab[mid], continue searching in the left half
-            right = mid - 1;
-        } else {
-            // str is greater than vocab[mid], continue searching in the right half
-            left = mid + 1;
+            if (result == 0) {
+                // Perfect match found
+                return &vocab->words[mid];
+            } else if (result < 0) {
+                // str is less than vocab[mid], continue searching in the left half
+                right = mid - 1;
+            } else {
+                // str is greater than vocab[mid], continue searching in the right half
+                left = mid + 1;
+            }
         }
-    }
 
-    // No match found
-    return NULL;
+        // No match found
+        return NULL;
+    }
 }
 
 static int compare(const void* a, const void* b) {
@@ -42,6 +46,7 @@ static int compare(const void* a, const void* b) {
 
 innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename) {
     innerDNN_bpe_vocab* vocab = (innerDNN_bpe_vocab*)malloc(sizeof(innerDNN_bpe_vocab));
+    vocab->indexer = NULL;
     vocab->words = NULL;
     FILE* file = fopen(filename, "r");  // 打开文件
     if (file != NULL) {
@@ -75,7 +80,8 @@ innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename) {
                     }
 
                     vocab->words[id].id = id;
-                    vocab->words[id].str = malloc(strlen(str->valuestring) + 1);
+                    vocab->words[id].length = strlen(str->valuestring);
+                    vocab->words[id].str = malloc(vocab->words[id].length + 1);
                     strcpy(vocab->words[id].str, str->valuestring);
                     vocab->words[id].score = score->valueint;
                     id++;
@@ -96,7 +102,20 @@ innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename) {
     }
     return vocab;
 }
+
+void innerDNN_bpe_createIndexer(innerDNN_bpe_vocab* vocab) {
+    vocab->indexer = (innerDNN_trie*)malloc(sizeof(innerDNN_trie));
+    innerDNN_trie_init(vocab->indexer);
+    for (int i = 0; i < vocab->count; ++i) {
+        innerDNN_trie_insert(vocab->indexer, vocab->words[i].str, &vocab->words[i]);
+    }
+}
+
 void innerDNN_bpe_releaseVocab(innerDNN_bpe_vocab* vocab) {
+    if (vocab->indexer) {
+        innerDNN_trie_destroy(vocab->indexer);
+        free(vocab->indexer);
+    }
     if (vocab->words != NULL) {
         for (int i = 0; i < vocab->count; ++i) {
             free(vocab->words[i].str);
