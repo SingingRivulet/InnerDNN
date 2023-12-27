@@ -13,6 +13,7 @@ typedef struct {
 
 typedef struct {
     innerDNN_bpe_vocab_item* words;
+    innerDNN_bpe_vocab_item** idMapper;
     int count;
 
     innerDNN_trie* indexer;

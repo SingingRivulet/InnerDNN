@@ -98,7 +98,11 @@ innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename) {
         exit(1);
     }
     if (vocab->words) {
-        qsort(vocab->words, vocab->count, sizeof(innerDNN_bpe_vocab), compare);
+        qsort(vocab->words, vocab->count, sizeof(innerDNN_bpe_vocab_item), compare);
+    }
+    vocab->idMapper = (innerDNN_bpe_vocab_item**)malloc(sizeof(innerDNN_bpe_vocab_item*) * vocab->count);
+    for (int i = 0; i < vocab->count; ++i) {
+        vocab->idMapper[vocab->words[i].id] = &vocab->words[i];
     }
     return vocab;
 }
@@ -121,6 +125,9 @@ void innerDNN_bpe_releaseVocab(innerDNN_bpe_vocab* vocab) {
             free(vocab->words[i].str);
         }
         free(vocab->words);
+    }
+    if (vocab->idMapper != NULL) {
+        free(vocab->idMapper);
     }
     free(vocab);
 }

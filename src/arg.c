@@ -79,7 +79,7 @@ int innerDNN_compare(const void* a, const void* b) {
     return 0;
 }
 
-int innerDNN_sample_topp(innerDNN_shader_programs* prog, GLuint probabilities_gpu, int n, float topp, innerDNN_probIndex* innerDNN_probIndex) {
+int innerDNN_sample_topp(innerDNN_shader_programs* prog, GLuint probabilities_gpu, int n, float topp, innerDNN_probIndex* probIndex) {
     // top-p sampling (or "nucleus sampling") samples from the smallest set of
     // tokens that exceed probability topp. This way we never sample tokens that
     // have very low probabilities and are less likely to go "off the rails".
@@ -92,16 +92,16 @@ int innerDNN_sample_topp(innerDNN_shader_programs* prog, GLuint probabilities_gp
     int res = n - 1;
     if (probabilities) {
         for (int i = 0; i < n; i++) {
-            innerDNN_probIndex[i].index = i;
-            innerDNN_probIndex[i].prob = probabilities[i];
+            probIndex[i].index = i;
+            probIndex[i].prob = probabilities[i];
         }
-        qsort(innerDNN_probIndex, n, sizeof(innerDNN_probIndex), innerDNN_compare);
+        qsort(probIndex, n, sizeof(innerDNN_probIndex), innerDNN_compare);
 
         // truncate the list where cumulative probability exceeds topp
         float cumulative_prob = 0.0f;
         int last_idx = 0;
         for (int i = 0; i < n; i++) {
-            cumulative_prob += innerDNN_probIndex[i].prob;
+            cumulative_prob += probIndex[i].prob;
             if (cumulative_prob > topp) {
                 last_idx = i;
                 break;  // we've exceeded topp by including last_idx
@@ -112,13 +112,13 @@ int innerDNN_sample_topp(innerDNN_shader_programs* prog, GLuint probabilities_gp
         float r = innerDNN_random_f32() * cumulative_prob;
         float cdf = 0.0f;
         for (int i = 0; i <= last_idx; i++) {
-            cdf += innerDNN_probIndex[i].prob;
+            cdf += probIndex[i].prob;
             if (r < cdf) {
-                res = innerDNN_probIndex[i].index;
+                res = probIndex[i].index;
                 break;
             }
         }
-        res = innerDNN_probIndex[last_idx].index;  // in case of rounding errors
+        res = probIndex[last_idx].index;  // in case of rounding errors
     }
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
