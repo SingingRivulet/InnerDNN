@@ -189,3 +189,21 @@ end:
     free(str_buffer);
     return status;
 }
+
+void innerDNN_bpe_decode(innerDNN_bpe_vocab* vocab, char* result, int resultLength, int* indices, int indexCount) {
+    // 遍历索引并拼接字符串
+    int i = 0;
+    result[0] = '\0';
+    for (i = 0; i < indexCount; i++) {
+        int index_mapper = indices[i];
+        if (index_mapper >= 0 && index_mapper < vocab->count) {
+            innerDNN_bpe_vocab_item* item = vocab->idMapper[index_mapper];
+            // 检查剩余的长度是否足够，如果不够则截断字符串
+            if (resultLength - strlen(result) < item->length) {
+                item->str[resultLength - strlen(result) - 1] = '\0';  // 截断字符串并添加null-terminator
+                break;                                                // 跳出循环，不再继续拼接
+            }
+            strcat(result, item->str);  // 拼接字符串
+        }
+    }
+}
