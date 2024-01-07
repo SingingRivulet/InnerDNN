@@ -47,6 +47,7 @@ static int compare(const void* a, const void* b) {
 innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename) {
     innerDNN_bpe_vocab* vocab = (innerDNN_bpe_vocab*)malloc(sizeof(innerDNN_bpe_vocab));
     vocab->indexer = NULL;
+    vocab->id_shift = 0;
     vocab->words = NULL;
     FILE* file = fopen(filename, "r");  // 打开文件
     if (file != NULL) {
@@ -57,7 +58,16 @@ innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename) {
             memset(buffer, 0, sizeof(buffer));
             fgets(buffer, sizeof(buffer), file);
             if (strlen(buffer) > 1) {
-                vocab->count++;
+                cJSON* root = cJSON_Parse(buffer);
+                if (root != NULL) {
+                    cJSON* score = cJSON_GetObjectItem(root, "score");
+                    cJSON* str = cJSON_GetObjectItem(root, "str");
+                    if (score != NULL && str != NULL &&
+                        score->type == cJSON_Number && str->type == cJSON_String) {
+                        vocab->count++;
+                    }
+                    cJSON_Delete(root);
+                }
             }
         }
         fseek(file, 0, SEEK_SET);
@@ -70,21 +80,33 @@ innerDNN_bpe_vocab* innerDNN_bpe_loadVocabFromFile(const char* filename) {
             if (strlen(buffer) > 1) {
                 cJSON* root = cJSON_Parse(buffer);
                 if (root != NULL) {
-                    cJSON* score = cJSON_GetObjectItem(root, "score");
-                    cJSON* str = cJSON_GetObjectItem(root, "str");
+                    cJSON* key = cJSON_GetObjectItem(root, "key");
+                    cJSON* value = cJSON_GetObjectItem(root, "value");
+                    if (key != NULL && value != NULL) {
+                        if (key->type == cJSON_String) {
+                            if (strcmp(key->valuestring, "id_shift") == 0) {
+                                if (value->type == cJSON_Number) {
+                                    vocab->id_shift = value->valueint;
+                                }
+                            }
+                        }
+                    } else {
+                        cJSON* score = cJSON_GetObjectItem(root, "score");
+                        cJSON* str = cJSON_GetObjectItem(root, "str");
 
-                    if (score == NULL || str == NULL ||
-                        score->type != cJSON_Number || str->type != cJSON_String) {
-                        fprintf(stderr, "fail to decode:%s\n", buffer);
-                        exit(1);
+                        if (score == NULL || str == NULL ||
+                            score->type != cJSON_Number || str->type != cJSON_String) {
+                            fprintf(stderr, "fail to decode:%s\n", buffer);
+                            exit(1);
+                        }
+
+                        vocab->words[id].id = id;
+                        vocab->words[id].length = strlen(str->valuestring);
+                        vocab->words[id].str = malloc(vocab->words[id].length + 1);
+                        strcpy(vocab->words[id].str, str->valuestring);
+                        vocab->words[id].score = score->valueint;
+                        id++;
                     }
-
-                    vocab->words[id].id = id;
-                    vocab->words[id].length = strlen(str->valuestring);
-                    vocab->words[id].str = malloc(vocab->words[id].length + 1);
-                    strcpy(vocab->words[id].str, str->valuestring);
-                    vocab->words[id].score = score->valueint;
-                    id++;
 
                     cJSON_Delete(root);
                 } else {
@@ -132,7 +154,7 @@ void innerDNN_bpe_releaseVocab(innerDNN_bpe_vocab* vocab) {
     free(vocab);
 }
 
-int innerDNN_bpe_encode(const char* text, innerDNN_bpe_vocab* vocab, unsigned int max_token_length, innerDNN_bpe_vocab_item** tokens, int* n_tokens) {
+int innerDNN_bpe_encode(const char* text, innerDNN_bpe_vocab* vocab, unsigned int max_token_length, innerDNN_bpe_vocab_item** tokens, int* tokens_id, int* n_tokens) {
     int status = 1;
     // a temporary buffer to merge two consecutive tokens
     char* str_buffer = (char*)malloc((max_token_length * 2 + 1) * sizeof(char));  // *2 for concat, +1 for null terminator
@@ -187,6 +209,11 @@ int innerDNN_bpe_encode(const char* text, innerDNN_bpe_vocab* vocab, unsigned in
 
 end:
     free(str_buffer);
+    if (tokens_id) {
+        for (int i = 0; i < (*n_tokens); ++i) {
+            tokens_id[i] = tokens[i]->id + vocab->id_shift;
+        }
+    }
     return status;
 }
 
@@ -195,7 +222,7 @@ void innerDNN_bpe_decode(innerDNN_bpe_vocab* vocab, char* result, int resultLeng
     int i = 0;
     result[0] = '\0';
     for (i = 0; i < indexCount; i++) {
-        int index_mapper = indices[i];
+        int index_mapper = indices[i] - vocab->id_shift;
         if (index_mapper >= 0 && index_mapper < vocab->count) {
             innerDNN_bpe_vocab_item* item = vocab->idMapper[index_mapper];
             // 检查剩余的长度是否足够，如果不够则截断字符串
